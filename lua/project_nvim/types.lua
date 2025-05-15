@@ -1,0 +1,44 @@
+---@class ProjectOptions
+---
+--- Manual mode doesn't automatically change your root directory, so you have the option to manually do so using
+--- `:ProjectRoot` command.
+---@field manual_mode? boolean
+---
+--- Methods of detecting the root directory. Here order matters: if one is not detected, the other is used as fallback.
+--- You can also delete or rearangne the detection methods.
+---@field detection_methods? DetectionMethod[]
+---
+--- All the patterns used to detect root dir, when **"pattern"** is in detection_methods
+---@field patterns? string[]
+---
+--- Table of lsp clients to ignore by name
+--- eg: { "efm", ... }
+---@field ignore_lsp? string[]
+---
+--- Don't calculate root dir on specific directories
+--- Ex: { "~/.cargo/*", ... }
+---@field exclude_dirs? string[]
+---
+--- Show hidden files in telescope
+---@field show_hidden? boolean
+---
+--- When set to false, you will get a message when project.nvim changes your directory.
+---@field silent_chdir? boolean
+---
+--- What scope to change the directory, valid options are
+--- * global (default)
+--- * tab
+--- * win
+---@field scope_chdir? ChdirScope
+---
+--- Path where project.nvim will store the project history for use in telescope
+---@field datapath? string
+
+---@alias DetectionMethod
+---| "lsp" uses the native neovim lsp
+---| "pattern" uses vim-rooter like glob pattern matching.
+
+---@alias ChdirScope
+---| "global" (default)
+---| "tab"
+---| "win"
