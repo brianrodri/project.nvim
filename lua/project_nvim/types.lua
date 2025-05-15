@@ -8,30 +8,27 @@
 --- You can also delete or rearrange the detection methods.
 ---@field detection_methods? DetectionMethod[]
 ---
---- All the patterns used to detect root dir, when **"pattern"** is in detection_methods
+--- All the patterns used to detect root dir, when `"pattern"` is in `detection_methods`.
 ---@field patterns? string[]
 ---
---- Table of lsp clients to ignore by name
---- eg: { "efm", ... }
+--- Table of lsp clients to ignore by name.
+--- For example: `{ "efm", ... }`
 ---@field ignore_lsp? string[]
 ---
---- Don't calculate root dir on specific directories
---- Ex: { "~/.cargo/*", ... }
+--- Don't calculate root dir on specific directories.
+--- For example: `{ "~/.cargo/*", ... }`
 ---@field exclude_dirs? string[]
 ---
---- Show hidden files in telescope
+--- Show hidden files in telescope.
 ---@field show_hidden? boolean
 ---
 --- When set to false, you will get a message when project.nvim changes your directory.
 ---@field silent_chdir? boolean
 ---
---- What scope to change the directory, valid options are
---- * global (default)
---- * tab
---- * win
+--- What scope to change the directory.
 ---@field scope_chdir? ChdirScope
 ---
---- Path where project.nvim will store the project history for use in telescope
+--- Path where project.nvim will store the project history for use in telescope.
 ---@field datapath? string
 
 ---@alias DetectionMethod
