@@ -16,6 +16,7 @@ M.last_project = nil
 local function is_lsp_with_root_dir(lsp_client, buffer_id)
   return lsp_client.config.root_dir ~= nil
     and lsp_client.attached_buffers[buffer_id]
+    and not path.is_excluded(lsp_client.config.root_dir)
     and not vim.tbl_contains(config.options.ignore_lsp, lsp_client.name)
 end
 
