@@ -27,9 +27,7 @@ function M.globtopattern(g)
   end
 
   -- escape pattern char
-  local function escape(c)
-    return c:match("^%w$") and c or "%" .. c
-  end
+  local function escape(c) return c:match("^%w$") and c or "%" .. c end
 
   -- Convert tokens at end of charset.
   local function charset_end()
@@ -41,9 +39,7 @@ function M.globtopattern(g)
         p = p .. "]"
         break
       else
-        if not unescape() then
-          break
-        end
+        if not unescape() then break end
         local c1 = c
         i = i + 1
         c = g:sub(i, i)
@@ -60,9 +56,7 @@ function M.globtopattern(g)
             p = p .. escape(c1) .. "%-]"
             break
           else
-            if not unescape() then
-              break
-            end
+            if not unescape() then break end
             p = p .. escape(c1) .. "-" .. escape(c)
           end
         elseif c == "]" then
@@ -93,15 +87,11 @@ function M.globtopattern(g)
         -- ignored
       else
         p = p .. "[^"
-        if not charset_end() then
-          return false
-        end
+        if not charset_end() then return false end
       end
     else
       p = p .. "["
-      if not charset_end() then
-        return false
-      end
+      if not charset_end() then return false end
     end
     return true
   end
@@ -118,9 +108,7 @@ function M.globtopattern(g)
     elseif c == "*" then
       p = p .. ".*"
     elseif c == "[" then
-      if not charset() then
-        break
-      end
+      if not charset() then break end
     elseif c == "\\" then
       i = i + 1
       c = g:sub(i, i)

@@ -35,7 +35,7 @@ M.defaults = {
   -- * global (default)
   -- * tab
   -- * win
-  scope_chdir = 'global',
+  scope_chdir = "global",
 
   -- Path where project.nvim will store the project history for use in
   -- telescope
@@ -51,9 +51,7 @@ M.setup = function(options)
   local glob = require("project_nvim.utils.globtopattern")
   local home = vim.fn.expand("~")
   M.options.exclude_dirs = vim.tbl_map(function(pattern)
-    if vim.startswith(pattern, "~/") then
-      pattern = home .. "/" .. pattern:sub(3, #pattern)
-    end
+    if vim.startswith(pattern, "~/") then pattern = home .. "/" .. pattern:sub(3, #pattern) end
     return glob.globtopattern(pattern)
   end, M.options.exclude_dirs)
 

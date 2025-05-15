@@ -1,7 +1,7 @@
 local path = require("project_nvim.utils.path")
 local uv = vim.loop
 local M = {}
-local is_windows = vim.fn.has('win32') or vim.fn.has('wsl')
+local is_windows = vim.fn.has("win32") or vim.fn.has("wsl")
 
 M.recent_projects = nil -- projects from previous neovim sessions
 M.session_projects = {} -- projects from current neovim session
@@ -9,9 +9,7 @@ M.has_watch_setup = false
 
 local function open_history(mode, callback)
   if callback ~= nil then -- async
-    path.create_scaffolding(function(_, _)
-      uv.fs_open(path.historyfile, mode, 438, callback)
-    end)
+    path.create_scaffolding(function(_, _) uv.fs_open(path.historyfile, mode, 438, callback) end)
   else -- sync
     path.create_scaffolding()
     return uv.fs_open(path.historyfile, mode, 438)
@@ -20,20 +18,16 @@ end
 
 local function dir_exists(dir)
   local stat = uv.fs_stat(dir)
-  if stat ~= nil and stat.type == "directory" then
-    return true
-  end
+  if stat ~= nil and stat.type == "directory" then return true end
   return false
 end
 
 local function normalise_path(path_to_normalise)
-    local normalised_path = path_to_normalise:gsub("\\", "/"):gsub("//", "/")
+  local normalised_path = path_to_normalise:gsub("\\", "/"):gsub("//", "/")
 
-    if is_windows then
-       normalised_path = normalised_path:sub(1,1):lower()..normalised_path:sub(2)
-    end
+  if is_windows then normalised_path = normalised_path:sub(1, 1):lower() .. normalised_path:sub(2) end
 
-    return normalised_path
+  return normalised_path
 end
 
 local function delete_duplicates(tbl)
@@ -61,9 +55,7 @@ end
 
 function M.delete_project(project)
   for k, v in ipairs(M.recent_projects) do
-    if v == project.value then
-      M.recent_projects[k] = nil
-    end
+    if v == project.value then M.recent_projects[k] = nil end
   end
 end
 
@@ -71,9 +63,7 @@ local function deserialize_history(history_data)
   -- split data to table
   local projects = {}
   for s in history_data:gmatch("[^\r\n]+") do
-    if not path.is_excluded(s) and dir_exists(s) then
-      table.insert(projects, s)
-    end
+    if not path.is_excluded(s) and dir_exists(s) then table.insert(projects, s) end
   end
 
   projects = delete_duplicates(projects)
@@ -86,13 +76,9 @@ local function setup_watch()
   if M.has_watch_setup == false then
     M.has_watch_setup = true
     local event = uv.new_fs_event()
-    if event == nil then
-      return
-    end
+    if event == nil then return end
     event:start(path.projectpath, {}, function(err, _, events)
-      if err ~= nil then
-        return
-      end
+      if err ~= nil then return end
       if events["change"] then
         M.recent_projects = nil
         M.read_projects_from_history()
@@ -130,25 +116,19 @@ local function sanitize_projects()
 
   local real_tbl = {}
   for _, dir in ipairs(tbl) do
-    if dir_exists(dir) then
-      table.insert(real_tbl, dir)
-    end
+    if dir_exists(dir) then table.insert(real_tbl, dir) end
   end
 
   return real_tbl
 end
 
-function M.get_recent_projects()
-  return sanitize_projects()
-end
+function M.get_recent_projects() return sanitize_projects() end
 
 function M.write_projects_to_history()
   -- Unlike read projects, write projects is synchronous
   -- because it runs when vim ends
   local mode = "w"
-  if M.recent_projects == nil then
-    mode = "a"
-  end
+  if M.recent_projects == nil then mode = "a" end
   local file = open_history(mode)
 
   if file ~= nil then
