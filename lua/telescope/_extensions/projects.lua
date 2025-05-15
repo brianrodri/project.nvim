@@ -12,9 +12,9 @@ local builtin = require("telescope.builtin")
 local entry_display = require("telescope.pickers.entry_display")
 local state = require("telescope.actions.state")
 
-local config = require("project_nvim.config")
-local history = require("project_nvim.utils.history")
-local project = require("project_nvim.project")
+local config = require("project.config")
+local history = require("project.utils.history")
+local project = require("project")
 
 ----------
 -- Actions
