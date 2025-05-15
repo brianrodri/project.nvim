@@ -1,7 +1,7 @@
-local config = require("project_nvim.config")
-local glob = require("project_nvim.utils.globtopattern")
-local history = require("project_nvim.utils.history")
-local path = require("project_nvim.utils.path")
+local config = require("project.config")
+local glob = require("project.utils.globtopattern")
+local history = require("project.utils.history")
+local path = require("project.utils.path")
 local uv = vim.loop
 local M = {}
 
@@ -227,18 +227,17 @@ end
 function M.init()
   local autocmds = {}
   if not config.options.manual_mode then
-    autocmds[#autocmds + 1] = 'autocmd VimEnter,BufEnter * ++nested lua require("project_nvim.project").on_buf_enter()'
+    autocmds[#autocmds + 1] = 'autocmd VimEnter,BufEnter * ++nested lua require("project.project").on_buf_enter()'
 
     if vim.tbl_contains(config.options.detection_methods, "lsp") then M.attach_to_lsp() end
   end
 
   vim.cmd([[
-    command! ProjectRoot lua require("project_nvim.project").on_buf_enter()
-    command! AddProject lua require("project_nvim.project").add_project_manually()
+    command! ProjectRoot lua require("project.project").on_buf_enter()
+    command! AddProject lua require("project.project").add_project_manually()
   ]])
 
-  autocmds[#autocmds + 1] =
-    'autocmd VimLeavePre * lua require("project_nvim.utils.history").write_projects_to_history()'
+  autocmds[#autocmds + 1] = 'autocmd VimLeavePre * lua require("project.utils.history").write_projects_to_history()'
 
   vim.cmd([[augroup project_nvim
             au!
