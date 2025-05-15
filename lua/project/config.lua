@@ -30,7 +30,7 @@ M.setup = function(options)
   vim.opt.autochdir = false -- implicitly unset autochdir
 
   require("project.utils.path").init()
-  require("project.project").init()
+  require("project").init()
 end
 
 return M

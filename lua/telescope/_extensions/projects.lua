@@ -14,7 +14,7 @@ local state = require("telescope.actions.state")
 
 local config = require("project.config")
 local history = require("project.utils.history")
-local project = require("project.project")
+local project = require("project")
 
 ----------
 -- Actions
