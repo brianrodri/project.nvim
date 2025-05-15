@@ -5,7 +5,7 @@
 ---@field manual_mode? boolean
 ---
 --- Methods of detecting the root directory. Here order matters: if one is not detected, the other is used as fallback.
---- You can also delete or rearangne the detection methods.
+--- You can also delete or rearrange the detection methods.
 ---@field detection_methods? DetectionMethod[]
 ---
 --- All the patterns used to detect root dir, when **"pattern"** is in detection_methods
