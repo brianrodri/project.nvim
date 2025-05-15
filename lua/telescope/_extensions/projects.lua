@@ -12,16 +12,14 @@ local builtin = require("telescope.builtin")
 local entry_display = require("telescope.pickers.entry_display")
 local state = require("telescope.actions.state")
 
-local config = require("project.config")
-local history = require("project.utils.history")
-local project = require("project")
+local projects = require("projects")
 
 ----------
 -- Actions
 ----------
 
 local function create_finder()
-  local results = history.get_recent_projects()
+  local results = projects.get_recent_projects()
 
   -- Reverse results
   for i = 1, math.floor(#results / 2) do
@@ -67,7 +65,7 @@ local function change_working_directory(prompt_bufnr, prompt)
   else
     actions.close(prompt_bufnr)
   end
-  local cd_successful = project.set_pwd(project_path, "telescope")
+  local cd_successful = projects.set_pwd(project_path, "telescope")
   return project_path, cd_successful
 end
 
@@ -75,7 +73,7 @@ local function find_project_files(prompt_bufnr)
   local project_path, cd_successful = change_working_directory(prompt_bufnr, true)
   local opt = {
     cwd = project_path,
-    hidden = config.options.show_hidden,
+    hidden = projects.get_options().show_hidden,
     mode = "insert",
   }
   if cd_successful then builtin.find_files(opt) end
@@ -85,7 +83,7 @@ local function browse_project_files(prompt_bufnr)
   local project_path, cd_successful = change_working_directory(prompt_bufnr, true)
   local opt = {
     cwd = project_path,
-    hidden = config.options.show_hidden,
+    hidden = projects.get_options().show_hidden,
   }
   if cd_successful then builtin.file_browser(opt) end
 end
@@ -94,7 +92,7 @@ local function search_in_project_files(prompt_bufnr)
   local project_path, cd_successful = change_working_directory(prompt_bufnr, true)
   local opt = {
     cwd = project_path,
-    hidden = config.options.show_hidden,
+    hidden = projects.get_options().show_hidden,
     mode = "insert",
   }
   if cd_successful then builtin.live_grep(opt) end
@@ -104,7 +102,7 @@ local function recent_project_files(prompt_bufnr)
   local _, cd_successful = change_working_directory(prompt_bufnr, true)
   local opt = {
     cwd_only = true,
-    hidden = config.options.show_hidden,
+    hidden = projects.get_options().show_hidden,
   }
   if cd_successful then builtin.oldfiles(opt) end
 end
@@ -118,7 +116,7 @@ local function delete_project(prompt_bufnr)
   local choice = vim.fn.confirm("Delete '" .. selectedEntry.value .. "' from project list?", "&Yes\n&No", 2)
 
   if choice == 1 then
-    history.delete_project(selectedEntry)
+    projects.delete_project(selectedEntry)
 
     local finder = create_finder()
     state.get_current_picker(prompt_bufnr):refresh(finder, {
@@ -129,7 +127,7 @@ end
 
 ---Main entrypoint for Telescope.
 ---@param opts table
-local function projects(opts)
+local function projects_entrypoint(opts)
   opts = opts or {}
 
   pickers
@@ -163,6 +161,6 @@ end
 
 return telescope.register_extension({
   exports = {
-    projects = projects,
+    projects = projects_entrypoint,
   },
 })

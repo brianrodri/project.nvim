@@ -56,7 +56,7 @@ Install the plugin with your preferred package manager:
 Plug 'ahmedkhalf/project.nvim'
 
 lua << EOF
-  require("project").setup {
+  require("projects").setup {
     -- your configuration comes here
     -- or leave it empty to use the default settings
     -- refer to the configuration section below
@@ -71,7 +71,7 @@ EOF
 use {
   "ahmedkhalf/project.nvim",
   config = function()
-    require("project").setup {
+    require("projects").setup {
       -- your configuration comes here
       -- or leave it empty to use the default settings
       -- refer to the configuration section below
@@ -202,8 +202,8 @@ require'telescope'.extensions.projects.projects{}
 Get a list of recent projects:
 
 ```lua
-local project = require("project")
-local recent_projects = project.get_recent_projects()
+local projects = require("projects")
+local recent_projects = projects.get_recent_projects()
 
 print(vim.inspect(recent_projects))
 ```
