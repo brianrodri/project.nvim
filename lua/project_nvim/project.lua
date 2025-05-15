@@ -9,23 +9,24 @@ local M = {}
 M.attached_lsp = false
 M.last_project = nil
 
+--- Returns whether the LSP defines a root directory for the given buffer.
+---@param lsp_client vim.lsp.Client
+---@param buffer_id integer
+---@return boolean
+local function is_lsp_with_root_dir(lsp_client, buffer_id)
+  return lsp_client.config.root_dir ~= nil
+    and lsp_client.attached_buffers[buffer_id]
+    and not vim.tbl_contains(config.options.ignore_lsp, lsp_client.name)
+end
+
+--- Get the root directory from an LSP client attached to the current buffer.
+---@overload fun(): root_dir: string, client_name: string
+---@overload fun(): nil
 function M.find_lsp_root()
-  -- Get lsp client for current buffer
-  -- Returns nil or string
-  local buf_ft = vim.api.nvim_buf_get_option(0, "filetype")
-  local clients = vim.lsp.buf_get_clients()
-  if next(clients) == nil then return nil end
-
-  for _, client in pairs(clients) do
-    local filetypes = client.config.filetypes
-    if filetypes and vim.tbl_contains(filetypes, buf_ft) then
-      if not vim.tbl_contains(config.options.ignore_lsp, client.name) then
-        return client.config.root_dir, client.name
-      end
-    end
-  end
-
-  return nil
+  local buf = vim.api.nvim_get_current_buf()
+  local client = vim.iter(vim.lsp.get_clients()):filter(function(cli) return is_lsp_with_root_dir(cli, buf) end):next()
+  ---@cast client vim.lsp.Client|?
+  if client then return client.config.root_dir, client.name end
 end
 
 function M.find_pattern_root()
@@ -131,7 +132,9 @@ function M.attach_to_lsp()
   if M.attached_lsp then return end
 
   local _start_client = vim.lsp.start_client
+
   -- luacheck: no global
+  ---@diagnostic disable-next-line: duplicate-set-field
   vim.lsp.start_client = function(lsp_config)
     if lsp_config.on_attach == nil then
       lsp_config.on_attach = on_attach_lsp
@@ -139,7 +142,7 @@ function M.attach_to_lsp()
       local _on_attach = lsp_config.on_attach
       lsp_config.on_attach = function(client, bufnr)
         on_attach_lsp(client, bufnr)
-        _on_attach(client, bufnr)
+        if _on_attach then _on_attach(client, bufnr) end
       end
     end
     return _start_client(lsp_config)
@@ -187,7 +190,7 @@ function M.get_project_root()
 end
 
 function M.is_file()
-  local buf_type = vim.api.nvim_buf_get_option(0, "buftype")
+  local buf_type = vim.api.nvim_get_option_value("buftype", { buf = 0 })
 
   local whitelisted_buf_type = { "", "acwrite" }
   local is_in_whitelist = false
