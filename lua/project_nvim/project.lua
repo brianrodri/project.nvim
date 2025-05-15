@@ -9,23 +9,17 @@ local M = {}
 M.attached_lsp = false
 M.last_project = nil
 
+--- Get the root directory from an LSP client attached to the current buffer.
+---@overload fun(): root_dir: string, client_name: string
+---@overload fun(): nil
 function M.find_lsp_root()
-  -- Get lsp client for current buffer
-  -- Returns nil or string
-  local buf_ft = vim.api.nvim_get_option_value("filetype", { buf = 0 })
-  local clients = vim.lsp.get_clients()
-  if next(clients) == nil then return nil end
-
-  for _, client in pairs(clients) do
-    local filetypes = client.config.filetypes
-    if filetypes and vim.tbl_contains(filetypes, buf_ft) then
-      if not vim.tbl_contains(config.options.ignore_lsp, client.name) then
-        return client.config.root_dir, client.name
-      end
-    end
-  end
-
-  return nil
+  local bufnr = vim.api.nvim_get_current_buf()
+  ---@type vim.lsp.Client|?
+  local client = vim
+    .iter(vim.lsp.get_clients())
+    :filter(function(cli) return cli.config.root_dir and cli.attached_buffers[bufnr] or false end)
+    :next()
+  if client then return client.config.root_dir, client.name end
 end
 
 function M.find_pattern_root()
@@ -131,7 +125,9 @@ function M.attach_to_lsp()
   if M.attached_lsp then return end
 
   local _start_client = vim.lsp.start_client
+
   -- luacheck: no global
+  ---@diagnostic disable-next-line: duplicate-set-field
   vim.lsp.start_client = function(lsp_config)
     if lsp_config.on_attach == nil then
       lsp_config.on_attach = on_attach_lsp
@@ -139,7 +135,7 @@ function M.attach_to_lsp()
       local _on_attach = lsp_config.on_attach
       lsp_config.on_attach = function(client, bufnr)
         on_attach_lsp(client, bufnr)
-        _on_attach(client, bufnr)
+        if _on_attach then _on_attach(client, bufnr) end
       end
     end
     return _start_client(lsp_config)
