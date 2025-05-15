@@ -35,10 +35,10 @@ function M.find_pattern_root()
   local last_dir_cache = ""
   local curr_dir_cache = {}
 
-  local function get_parent(path)
-    path = path:match("^(.*)/")
-    if path == "" then path = "/" end
-    return path
+  local function get_parent(p)
+    p = p:match("^(.*)/")
+    if p == "" then p = "/" end
+    return p
   end
 
   local function get_files(file_dir)
@@ -62,18 +62,18 @@ function M.find_pattern_root()
   end
 
   local function sub(dir, identifier)
-    local path = get_parent(dir)
+    local p = get_parent(dir)
     while true do
-      if is(path, identifier) then return true end
-      local current = path
-      path = get_parent(path)
-      if current == path then return false end
+      if is(p, identifier) then return true end
+      local current = p
+      p = get_parent(p)
+      if current == p then return false end
     end
   end
 
   local function child(dir, identifier)
-    local path = get_parent(dir)
-    return is(path, identifier)
+    local p = get_parent(dir)
+    return is(p, identifier)
   end
 
   local function has(dir, identifier)
@@ -123,7 +123,7 @@ function M.find_pattern_root()
 end
 
 ---@diagnostic disable-next-line: unused-local
-local on_attach_lsp = function(client, bufnr)
+local on_attach_lsp = function(_client, _bufnr)
   M.on_buf_enter() -- Recalculate root dir after lsp attaches
 end
 
@@ -131,6 +131,7 @@ function M.attach_to_lsp()
   if M.attached_lsp then return end
 
   local _start_client = vim.lsp.start_client
+  -- luacheck: no global
   vim.lsp.start_client = function(lsp_config)
     if lsp_config.on_attach == nil then
       lsp_config.on_attach = on_attach_lsp
