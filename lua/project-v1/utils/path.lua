@@ -1,4 +1,4 @@
-local config = require("project-v1.config")
+local config_v1 = require("project-v1.config")
 local uv = vim.loop
 local M = {}
 
@@ -21,7 +21,7 @@ function M.create_scaffolding(callback)
 end
 
 function M.is_excluded(dir)
-  for _, dir_pattern in ipairs(config.options.exclude_dirs) do
+  for _, dir_pattern in ipairs(config_v1.options.exclude_dirs) do
     if dir:match(dir_pattern) ~= nil then return true end
   end
 

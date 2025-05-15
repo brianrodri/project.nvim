@@ -19,11 +19,11 @@ M.options = {}
 M.setup = function(options)
   M.options = vim.tbl_deep_extend("force", M.defaults, options or {})
 
-  local glob = require("project-v1.utils.globtopattern")
+  local glob_v1 = require("project-v1.utils.globtopattern")
   local home = vim.fn.expand("~")
   M.options.exclude_dirs = vim.tbl_map(function(pattern)
     if vim.startswith(pattern, "~/") then pattern = home .. "/" .. pattern:sub(3, #pattern) end
-    return glob.globtopattern(pattern)
+    return glob_v1.globtopattern(pattern)
   end, M.options.exclude_dirs)
 
   -- luacheck: no global

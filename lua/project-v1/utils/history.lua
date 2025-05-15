@@ -1,4 +1,4 @@
-local path = require("project-v1.utils.path")
+local path_v1 = require("project-v1.utils.path")
 local uv = vim.loop
 local M = {}
 local is_windows = vim.fn.has("win32") or vim.fn.has("wsl")
@@ -9,10 +9,10 @@ M.has_watch_setup = false
 
 local function open_history(mode, callback)
   if callback ~= nil then -- async
-    path.create_scaffolding(function(_, _) uv.fs_open(path.historyfile, mode, 438, callback) end)
+    path_v1.create_scaffolding(function(_, _) uv.fs_open(path_v1.historyfile, mode, 438, callback) end)
   else -- sync
-    path.create_scaffolding()
-    return uv.fs_open(path.historyfile, mode, 438)
+    path_v1.create_scaffolding()
+    return uv.fs_open(path_v1.historyfile, mode, 438)
   end
 end
 
@@ -63,7 +63,7 @@ local function deserialize_history(history_data)
   -- split data to table
   local projects = {}
   for s in history_data:gmatch("[^\r\n]+") do
-    if not path.is_excluded(s) and dir_exists(s) then table.insert(projects, s) end
+    if not path_v1.is_excluded(s) and dir_exists(s) then table.insert(projects, s) end
   end
 
   projects = delete_duplicates(projects)
@@ -77,7 +77,7 @@ local function setup_watch()
     M.has_watch_setup = true
     local event = uv.new_fs_event()
     if event == nil then return end
-    event:start(path.projectpath, {}, function(err, _, events)
+    event:start(path_v1.projectpath, {}, function(err, _, events)
       if err ~= nil then return end
       if events["change"] then
         M.recent_projects = nil

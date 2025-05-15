@@ -1,15 +1,15 @@
-local config = require("project-v1.config")
-local glob = require("project-v1.utils.globtopattern")
-local history = require("project-v1.utils.history")
-local path = require("project-v1.utils.path")
+local config_v1 = require("project-v1.config")
+local glob_v1 = require("project-v1.utils.globtopattern")
+local history_v1 = require("project-v1.utils.history")
+local path_v1 = require("project-v1.utils.path")
 local uv = vim.loop
 local M = {}
 
 -- Public API
-M.setup = config.setup
-M.get_recent_projects = history.get_recent_projects
-M.delete_project = history.delete_project
-M.get_options = function() return config.options end
+M.setup = config_v1.setup
+M.get_recent_projects = history_v1.get_recent_projects
+M.delete_project = history_v1.delete_project
+M.get_options = function() return config_v1.options end
 
 -- Internal states
 M.attached_lsp = false
@@ -22,8 +22,8 @@ M.last_project = nil
 local function is_lsp_with_root_dir(lsp_client, buffer_id)
   return lsp_client.attached_buffers[buffer_id]
     and lsp_client.config.root_dir ~= nil
-    and not path.is_excluded(lsp_client.config.root_dir)
-    and not vim.tbl_contains(config.options.ignore_lsp, lsp_client.name)
+    and not path_v1.is_excluded(lsp_client.config.root_dir)
+    and not vim.tbl_contains(config_v1.options.ignore_lsp, lsp_client.name)
 end
 
 --- Get the root directory from an LSP client attached to the current buffer.
@@ -39,7 +39,7 @@ end
 function M.find_pattern_root()
   local search_dir = vim.fn.expand("%:p:h", true)
   if vim.fn.has("win32") > 0 then search_dir = search_dir:gsub("\\", "/") end
-  if path.is_excluded(search_dir) then return nil end
+  if path_v1.is_excluded(search_dir) then return nil end
 
   local last_dir_cache = ""
   local curr_dir_cache = {}
@@ -87,7 +87,7 @@ function M.find_pattern_root()
 
   local function has(dir, identifier)
     if last_dir_cache ~= dir then get_files(dir) end
-    local pattern = glob.globtopattern(identifier)
+    local pattern = glob_v1.globtopattern(identifier)
     for _, file in ipairs(curr_dir_cache) do
       if file:match(pattern) ~= nil then return true end
     end
@@ -109,7 +109,7 @@ function M.find_pattern_root()
 
   -- breadth-first search
   while true do
-    for _, pattern in ipairs(config.options.patterns) do
+    for _, pattern in ipairs(config_v1.options.patterns) do
       local exclude = false
       if pattern:sub(1, 1) == "!" then
         exclude = true
@@ -162,10 +162,10 @@ end
 function M.set_pwd(dir, method)
   if dir ~= nil then
     M.last_project = dir
-    table.insert(history.session_projects, dir)
+    table.insert(history_v1.session_projects, dir)
 
     if vim.fn.getcwd() ~= dir then
-      local scope_chdir = config.options.scope_chdir
+      local scope_chdir = config_v1.options.scope_chdir
       if scope_chdir == "global" then
         vim.api.nvim_set_current_dir(dir)
       elseif scope_chdir == "tab" then
@@ -176,7 +176,7 @@ function M.set_pwd(dir, method)
         return
       end
 
-      if config.options.silent_chdir == false then vim.notify("Set CWD to " .. dir .. " using " .. method) end
+      if config_v1.options.silent_chdir == false then vim.notify("Set CWD to " .. dir .. " using " .. method) end
     end
     return true
   end
@@ -186,7 +186,7 @@ end
 
 function M.get_project_root()
   -- returns project root, as well as method
-  for _, detection_method in ipairs(config.options.detection_methods) do
+  for _, detection_method in ipairs(config_v1.options.detection_methods) do
     if detection_method == "lsp" then
       local root, lsp_name = M.find_lsp_root()
       if root ~= nil then return root, '"' .. lsp_name .. '"' .. " lsp" end
@@ -219,7 +219,7 @@ function M.on_buf_enter()
   if not M.is_file() then return end
 
   local current_dir = vim.fn.expand("%:p:h", true)
-  if not path.exists(current_dir) or path.is_excluded(current_dir) then return end
+  if not path_v1.exists(current_dir) or path_v1.is_excluded(current_dir) then return end
 
   local root, method = M.get_project_root()
   M.set_pwd(root, method)
@@ -232,10 +232,10 @@ end
 
 function M.init()
   local autocmds = {}
-  if not config.options.manual_mode then
+  if not config_v1.options.manual_mode then
     autocmds[#autocmds + 1] = 'autocmd VimEnter,BufEnter * ++nested lua require("project-v1").on_buf_enter()'
 
-    if vim.tbl_contains(config.options.detection_methods, "lsp") then M.attach_to_lsp() end
+    if vim.tbl_contains(config_v1.options.detection_methods, "lsp") then M.attach_to_lsp() end
   end
 
   vim.cmd([[
@@ -253,7 +253,7 @@ function M.init()
   end
   vim.cmd("augroup END")
 
-  history.read_projects_from_history()
+  history_v1.read_projects_from_history()
 end
 
 return M
