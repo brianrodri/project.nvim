@@ -8,6 +8,8 @@ local M = {}
 -- Public API
 M.setup = config.setup
 M.get_recent_projects = history.get_recent_projects
+M.delete_project = history.delete_project
+M.get_options = function() return config.options end
 
 -- Internal states
 M.attached_lsp = false
