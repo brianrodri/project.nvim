@@ -9,16 +9,23 @@ local M = {}
 M.attached_lsp = false
 M.last_project = nil
 
+--- Returns whether the LSP defines a root directory for the given buffer.
+---@param lsp_client vim.lsp.Client
+---@param buffer_id integer
+---@return boolean
+local function is_lsp_with_root_dir(lsp_client, buffer_id)
+  return lsp_client.config.root_dir ~= nil
+    and lsp_client.attached_buffers[buffer_id]
+    and not vim.tbl_contains(config.options.ignore_lsp, lsp_client.name)
+end
+
 --- Get the root directory from an LSP client attached to the current buffer.
 ---@overload fun(): root_dir: string, client_name: string
 ---@overload fun(): nil
 function M.find_lsp_root()
-  local bufnr = vim.api.nvim_get_current_buf()
-  ---@type vim.lsp.Client|?
-  local client = vim
-    .iter(vim.lsp.get_clients())
-    :filter(function(cli) return cli.config.root_dir and cli.attached_buffers[bufnr] or false end)
-    :next()
+  local buf = vim.api.nvim_get_current_buf()
+  local client = vim.iter(vim.lsp.get_clients()):filter(function(cli) return is_lsp_with_root_dir(cli, buf) end):next()
+  ---@cast client vim.lsp.Client|?
   if client then return client.config.root_dir, client.name end
 end
 
