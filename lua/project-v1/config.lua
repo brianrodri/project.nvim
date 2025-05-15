@@ -19,7 +19,7 @@ M.options = {}
 M.setup = function(options)
   M.options = vim.tbl_deep_extend("force", M.defaults, options or {})
 
-  local glob = require("project.utils.globtopattern")
+  local glob = require("project-v1.utils.globtopattern")
   local home = vim.fn.expand("~")
   M.options.exclude_dirs = vim.tbl_map(function(pattern)
     if vim.startswith(pattern, "~/") then pattern = home .. "/" .. pattern:sub(3, #pattern) end
@@ -29,8 +29,8 @@ M.setup = function(options)
   -- luacheck: no global
   vim.opt.autochdir = false -- implicitly unset autochdir
 
-  require("project.utils.path").init()
-  require("project").init()
+  require("project-v1.utils.path").init()
+  require("project-v1").init()
 end
 
 return M

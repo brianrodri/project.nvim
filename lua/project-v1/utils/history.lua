@@ -1,4 +1,4 @@
-local path = require("project.utils.path")
+local path = require("project-v1.utils.path")
 local uv = vim.loop
 local M = {}
 local is_windows = vim.fn.has("win32") or vim.fn.has("wsl")

@@ -1,4 +1,4 @@
-local config = require("project.config")
+local config = require("project-v1.config")
 local uv = vim.loop
 local M = {}
 
@@ -7,7 +7,7 @@ M.projectpath = M.datapath .. "/project" -- directory
 M.historyfile = M.projectpath .. "/project_history" -- file
 
 function M.init()
-  M.datapath = require("project.config").options.datapath
+  M.datapath = require("project-v1.config").options.datapath
   M.projectpath = M.datapath .. "/project" -- directory
   M.historyfile = M.projectpath .. "/project_history" -- file
 end

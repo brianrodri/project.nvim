@@ -12,9 +12,9 @@ local builtin = require("telescope.builtin")
 local entry_display = require("telescope.pickers.entry_display")
 local state = require("telescope.actions.state")
 
-local config = require("project.config")
-local history = require("project.utils.history")
-local project = require("project")
+local config = require("project-v1.config")
+local history = require("project-v1.utils.history")
+local project = require("project-v1")
 
 ----------
 -- Actions
