@@ -1,6 +1,6 @@
 local M = {}
 
----@class ProjectOptions
+---@class v1.ProjectOptions
 M.defaults = {
   manual_mode = false,
   detection_methods = { "lsp", "pattern" },
@@ -13,7 +13,7 @@ M.defaults = {
   datapath = vim.fn.stdpath("data"),
 }
 
----@type ProjectOptions
+---@type v1.ProjectOptions
 M.options = {}
 
 M.setup = function(options)
