@@ -21,20 +21,18 @@ function Path.is_path_obj(obj)
   return true
 end
 
---- Wrapper around |vim.fs.joinpath()|.
+--- Wrapper around |vim.fs.joinpath()|. Terminates with an error if no paths are provided.
 ---
 --- NOTE: This function is the "constructor" of this class!
 ---
----@param base projects.Path|string     The base path (absolute or relative).
----@param ... projects.Path|string|nil  Zero or more relative paths. Ignores `nil` values.
----@return projects.Path joined_path    The concatenated path.
-function Path.join(base, ...)
-  if select("#", ...) == 0 and Path.is_path_obj(base) then ---@cast base projects.Path
-    return base
-  end
-  local path_parts = vim.tbl_map(tostring, { base, ... })
-  local ok, result = pcall(vim.fs.joinpath, unpack(path_parts))
-  assert(ok, fmt.call_error(result, "Path.new", base, ...))
+---@param ... projects.Path|string|?  The paths to join. The first must absolute or relative, the rest must be relative.
+---@return projects.Path joined_path  The concatenated path.
+function Path.join(...)
+  local path_parts = vim.iter({ ... }):filter(function(p) return p ~= nil end):totable()
+  if #path_parts == 1 and Path.is_path_obj(path_parts[1]) then return path_parts[1] end
+  assert(#path_parts > 0, fmt.call_error("one or more path(s) required", "Path.join", ...))
+  local ok, result = pcall(vim.fs.joinpath, unpack(vim.tbl_map(tostring, path_parts)))
+  assert(ok, fmt.call_error(result, "Path.join", ...))
   local self = setmetatable({}, Path)
   self.path = result
   self.resolved = false
