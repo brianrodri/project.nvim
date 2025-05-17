@@ -34,6 +34,6 @@ function API:get_recent_projects(opts) return errors.TODO("get_recent_projects",
 function API:set_working_directory(opts) return errors.TODO("set_working_directory", self, opts) end
 
 ---@return projects.UserConfig
-function API:get_options() return errors.TODO("get_options", self) end
+function API:get_options() return vim.deepcopy(self.opts) end
 
 return API
