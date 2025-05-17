@@ -4,16 +4,19 @@ local path = require("projects.utils.path")
 
 local M = {}
 
+---@class projects.UserConfig
+---@field data_dir? string|fun(): string  Determines where the plugin stores its persistent state.
+
+---@class projects.ResolvedConfig: projects.UserConfig
+---@field data_dir projects.Path
+
 ---@type projects.UserConfig
 local DEFAULT_CONFIG = {
   data_dir = vim.fn.stdpath("data"),
 }
 
----@class projects.ResolvedUserConfig: projects.UserConfig
----@field data_dir projects.Path
-
 ---@generic T
----@type table<string, fun(opts: projects.UserConfig, resolved: projects.ResolvedUserConfig)>
+---@type table<string, fun(opts: projects.UserConfig, resolved: projects.ResolvedConfig)>
 local FIELD_RESOLVERS = {
   data_dir = function(opts, resolved)
     local data_dir = assert(opts.data_dir, "value is required")
@@ -22,7 +25,7 @@ local FIELD_RESOLVERS = {
 }
 
 ---@param opts? projects.UserConfig
----@return projects.ResolvedUserConfig
+---@return projects.ResolvedConfig
 function M.resolve_opts(opts)
   local resolved = vim.tbl_deep_extend("force", vim.deepcopy(DEFAULT_CONFIG), opts or {})
   local resolve_errors = {}
@@ -31,7 +34,7 @@ function M.resolve_opts(opts)
     if not ok then table.insert(resolve_errors, string.format('invalid "%s": %s', field, vim.inspect(value))) end
   end
   assert(#resolve_errors == 0, fmt.call_error(errors.join(resolve_errors), "resolve_opts", opts))
-  ---@cast resolved projects.ResolvedUserConfig
+  ---@cast resolved projects.ResolvedConfig
   return resolved
 end
 

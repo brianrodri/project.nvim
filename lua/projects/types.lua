@@ -2,10 +2,6 @@
 
 ---@alias projects.PathLike (string | projects.Path)
 
----@class projects.UserConfig
----
----@field data_dir? string|fun(): string  Determines where the plugin stores its persistent state.
-
 ---@class projects.AddProjectOpts
 
 ---@class projects.DeleteProjectOpts
