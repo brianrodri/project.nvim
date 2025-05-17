@@ -57,6 +57,16 @@ end
 
 --- Wrapper around |stdpath|.
 ---
+---@param what
+---| "cache"        Cache directory: arbitrary temporary storage for plugins, etc.
+---| "config"       User configuration directory. |init.vim| is stored here.
+---| "config_dirs"  Other configuration directories.
+---| "data"         User data directory.
+---| "data_dirs"    Other data directories.
+---| "log"          Logs directory (for use by plugins too).
+---| "run"          Run directory: temporary, local storage for sockets, named pipes, etc.
+---| "state"        Session state directory: storage for file drafts, swap, undo, |shada|.
+---
 ---@overload fun(what: "cache" | "config" | "data" | "log" | "run" | "state", ...: projects.Path|string): projects.Path
 ---@overload fun(what: "config_dirs" | "data_dirs"): projects.Path[]
 function Path.stdpath(what, ...)
