@@ -19,7 +19,7 @@ function API.setup(opts)
 end
 
 ---@return projects.UserConfig
-function API:get_options() return vim.deepcopy(self.state.opts) end
+function API:get_options() return errors.TODO("API.get_options", self) end
 
 ---@param opts projects.AddProjectOpts
 ---@return boolean ok, string|? err
