@@ -59,6 +59,19 @@ function Path.stdpath(what, ...)
   return type(result) == "table" and vim.iter(result):map(Path.new):totable() or Path.new(result, ...)
 end
 
+--- Wrapper around |io.open|.
+---
+---@param mode openmode
+---@param file_consumer fun(path: file*)
+function Path:with_file(mode, file_consumer)
+  local file, open_err = io.open(self.path_str, mode)
+  assert(file, errors.format_call_error(open_err, "Path.with_file", self, mode, file_consumer))
+  local call_ok, call_err = pcall(file_consumer, file)
+  local close_ok, close_err, close_err_code = file:close()
+  local root_cause = errors.join(call_err, close_err and string.format("%s(%d)", close_err, close_err_code))
+  assert(call_ok and close_ok, errors.format_call_error(root_cause, "Path.with_file", self, mode, file_consumer))
+end
+
 --- Wrapper around |fs_realpath|.
 ---
 --- NOTE: This mutates `self`!
