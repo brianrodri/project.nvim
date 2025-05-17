@@ -22,18 +22,18 @@ function API:get_options() return vim.deepcopy(self.opts) end
 
 ---@param opts projects.RegisterProjectOpts
 ---@return boolean ok, string|? err
-function API:register_project(opts) return errors.TODO("register_project", self, opts) end
+function API:register_project(opts) return errors.TODO("API.register_project", self, opts) end
 
 ---@param opts projects.DeleteProjectOpts
 ---@return boolean ok, string|? err
-function API:delete_project(opts) return errors.TODO("delete_project", self, opts) end
+function API:delete_project(opts) return errors.TODO("API.delete_project", self, opts) end
 
 ---@param opts projects.EnterProjectDirectoryOpts|?
 ---@return boolean ok, string|? err
-function API:enter_project_directory(opts) return errors.TODO("enter_project_directory", self, opts) end
+function API:enter_project_directory(opts) return errors.TODO("API.enter_project_directory", self, opts) end
 
 ---@param opts projects.GetRecentProjectsOpts|?
 ---@return boolean ok, string|? err
-function API:get_recent_projects(opts) return errors.TODO("get_recent_projects", self, opts) end
+function API:get_recent_projects(opts) return errors.TODO("API.get_recent_projects", self, opts) end
 
 return API
