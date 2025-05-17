@@ -1,23 +1,30 @@
 local errors = require("projects.errors")
 local fmt = require("projects.utils.fmt")
+local path = require("projects.utils.path")
+
+local PERSISTED_STATE_PATH = "projects.nvim/persisted-state.json"
 
 ---@class projects.State
----@field opts projects.UserConfig
-local State = {}
+---@field state_path projects.Path
+---@field resolved boolean
+local State = {
+  __tostring = function(self) return fmt.class_string(self, "projects.State", "state_path", "resolved") end,
+}
 
----@return string
-function State:__tostring() return fmt.class_string(self, "projects.State", "state_path", "history_path") end
+function State.init()
+  local self = setmetatable({}, State)
+  self.state_path = path.stdpath("data"):join(PERSISTED_STATE_PATH)
+  self.resolved = false
+  return self
+end
 
 ---@param opts? projects.UserConfig
----@return projects.State
-function State.load_or_init(opts) return errors.TODO("State.load_or_init", opts) end
-
-function State:sync_projects() return errors.TODO("State.sync_projects", self) end
+function State:resolve(opts) errors.TODO("State.resolve", self, opts) end
 
 ---@param opts projects.AddProjectOpts
-function State:add_project(opts) return errors.TODO("State.add_project", self, opts) end
+function State:add_project(opts) errors.TODO("State.add_project", self, opts) end
 
 ---@param opts projects.DeleteProjectOpts
-function State:delete_project(opts) return errors.TODO("State.delete_project", self, opts) end
+function State:delete_project(opts) errors.TODO("State.delete_project", self, opts) end
 
 return State

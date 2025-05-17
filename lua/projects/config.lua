@@ -17,7 +17,7 @@ local DEFAULT_CONFIG = {
 local FIELD_RESOLVERS = {
   data_dir = function(opts, resolved)
     local data_dir = assert(opts.data_dir, "value is required")
-    resolved.data_dir = path.join(type(data_dir) == "string" and data_dir or data_dir()):resolve()
+    resolved.data_dir = path.join(type(data_dir) == "string" and data_dir or data_dir())
   end,
 }
 

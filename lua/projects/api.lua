@@ -5,29 +5,25 @@ local state = require("projects.state")
 local API = {
   --- Global state for the API.
   ---
+  ---@type projects.State
   ---@private
-  ---@type projects.State|?
-  state = nil,
+  global_state = state.init(),
 }
 
 ---@param opts? projects.UserConfig
 ---@return projects.API
 function API.setup(opts)
-  local self = setmetatable({}, API)
-  self.state = self.state or state.load_or_init(opts)
-  return self
+  API.global_state:resolve(opts)
+  return setmetatable({}, API)
 end
-
----@return projects.UserConfig
-function API:get_options() return errors.TODO("API.get_options", self) end
 
 ---@param opts projects.AddProjectOpts
 ---@return boolean ok, string|? err
-function API:add_project(opts) return pcall(self.state.add_project, self.state, opts) end
+function API:add_project(opts) return pcall(self.global_state.add_project, self.global_state, opts) end
 
 ---@param opts projects.DeleteProjectOpts
 ---@return boolean ok, string|? err
-function API:delete_project(opts) return pcall(self.state.delete_project, self.state, opts) end
+function API:delete_project(opts) return pcall(self.global_state.delete_project, self.global_state, opts) end
 
 ---@param opts projects.EnterProjectDirectoryOpts|?
 ---@return boolean ok, string|? err
