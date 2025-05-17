@@ -1,0 +1,11 @@
+-- TODO: Define types.
+--
+---@class projects.UserConfig
+---
+---@class projects.RegisterProjectOpts
+---@class projects.RegisterProjectReturn
+---@class projects.DeleteProjectOpts
+---@class projects.GetRecentProjectsOpts
+---@class projects.SetPwdOpts
+---
+---@class projects.State
