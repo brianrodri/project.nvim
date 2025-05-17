@@ -142,7 +142,8 @@ end
 ---| fun(path: projects.Path): boolean  A function that returns true if matched.
 ---@return projects.Path|?
 function Path:find_root(marker)
-  local root = vim.fs.root(self.path, function(_, path) return marker(Path.join(path)) end)
+  if vim.is_callable(marker) then marker = function(_, path) return marker(Path.join(path)) end end
+  local root = vim.fs.root(self.path, marker)
   return root and Path.join(root)
 end
 
