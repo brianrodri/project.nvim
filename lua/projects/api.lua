@@ -18,19 +18,19 @@ function API.setup(opts)
 end
 
 ---@param opts projects.AddProjectOpts
----@return boolean ok, string|? err
+---@return boolean ok, unknown err
 function API:add_project(opts) return pcall(self.global_state.add_project, self.global_state, opts) end
 
 ---@param opts projects.DeleteProjectOpts
----@return boolean ok, string|? err
+---@return boolean ok, unknown err
 function API:delete_project(opts) return pcall(self.global_state.delete_project, self.global_state, opts) end
 
 ---@param opts projects.EnterProjectDirectoryOpts|?
----@return boolean ok, string|? err
+---@return boolean ok, unknown err
 function API:enter_project_directory(opts) return errors.TODO("API.enter_project_directory", self, opts) end
 
 ---@param opts projects.GetRecentProjectsOpts|?
----@return boolean ok, string|? err
+---@return boolean ok, unknown err
 function API:get_recent_projects(opts) return errors.TODO("API.get_recent_projects", self, opts) end
 
 return API
