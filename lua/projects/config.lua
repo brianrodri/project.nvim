@@ -32,7 +32,9 @@ function M.resolve_opts(opts)
   local resolve_errors = {}
   for field, resolver in pairs(FIELD_RESOLVERS) do
     local ok, err = pcall(resolver, opts, resolved)
-    if not ok then table.insert(resolve_errors, string.format("invalid %s: %s", field, tostring(err))) end
+    if not ok then
+      table.insert(resolve_errors, string.format("invalid %s = %s: %s", field, vim.inspect(opts[field]), tostring(err)))
+    end
   end
   assert(#resolve_errors == 0, string.format("failed to resolve UserConfig: %s", errors.join(resolve_errors)))
   ---@cast resolved projects.ResolvedConfig
