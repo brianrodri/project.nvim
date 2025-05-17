@@ -15,7 +15,6 @@ local DEFAULT_CONFIG = {
   data_dir = vim.fn.stdpath("data") .. "/projects.nvim",
 }
 
----@generic T
 ---@type table<string, fun(opts: projects.UserConfig, resolved: projects.ResolvedConfig)>
 local FIELD_RESOLVERS = {
   data_dir = function(opts, resolved)
@@ -36,7 +35,7 @@ function M.resolve_opts(opts)
     local ok, err = pcall(resolver, opts, resolved)
     if not ok then table.insert(resolve_errors, string.format("invalid %s: %s", field, tostring(err))) end
   end
-  assert(#resolve_errors == 0, fmt.call_error(errors.join(resolve_errors), "resolve_opts", opts))
+  assert(#resolve_errors == 0, string.format("failed to resolve UserConfig: %s", errors.join(resolve_errors)))
   ---@cast resolved projects.ResolvedConfig
   return resolved
 end
