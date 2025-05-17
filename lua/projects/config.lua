@@ -19,8 +19,10 @@ local DEFAULT_CONFIG = {
 ---@type table<string, fun(opts: projects.UserConfig, resolved: projects.ResolvedConfig)>
 local FIELD_RESOLVERS = {
   data_dir = function(opts, resolved)
-    local data_dir = assert(opts.data_dir, "value is required")
-    resolved.data_dir = path.join(type(data_dir) == "string" and data_dir or data_dir())
+    local opts_data_dir = assert(opts.data_dir, "value is required")
+    local resolved_data_dir = path.join(type(opts_data_dir) == "string" and opts_data_dir or opts_data_dir())
+    resolved_data_dir:make_directory()
+    resolved.data_dir = resolved_data_dir
   end,
 }
 
