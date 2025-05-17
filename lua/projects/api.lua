@@ -1,36 +1,31 @@
 local errors = require("projects.errors")
 local state = require("projects.state")
 
----@class projects.API
-local API = {
-  --- Global state for the API.
+local M = {
+  --- Global plugin state.
   ---
-  ---@type projects.State
   ---@private
+  ---@type projects.State
   global_state = state.init(),
 }
 
 ---@param opts? projects.UserConfig
----@return projects.API
-function API.setup(opts)
-  API.global_state:resolve(opts)
-  return setmetatable({}, API)
-end
+function M.setup(opts) M.global_state:resolve(opts) end
 
 ---@param opts projects.AddProjectOpts
 ---@return boolean ok, unknown|? err
-function API:add_project(opts) return pcall(self.global_state.add_project, self.global_state, opts) end
+function M.add_project(opts) return pcall(M.global_state.add_project, M.global_state, opts) end
 
 ---@param opts projects.DeleteProjectOpts
 ---@return boolean ok, unknown|? err
-function API:delete_project(opts) return pcall(self.global_state.delete_project, self.global_state, opts) end
+function M.delete_project(opts) return pcall(M.global_state.delete_project, M.global_state, opts) end
 
 ---@param opts projects.EnterProjectDirectoryOpts|?
 ---@return boolean ok, unknown|? err
-function API:enter_project_directory(opts) return errors.TODO("API.enter_project_directory", self, opts) end
+function M.enter_project_directory(opts) return errors.TODO("API.enter_project_directory", opts) end
 
 ---@param opts projects.GetRecentProjectsOpts|?
 ---@return boolean ok, unknown|? err
-function API:get_recent_projects(opts) return errors.TODO("API.get_recent_projects", self, opts) end
+function M.get_recent_projects(opts) return errors.TODO("API.get_recent_projects", opts) end
 
-return API
+return M
