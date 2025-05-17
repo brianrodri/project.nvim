@@ -1,6 +1,9 @@
 local M = {}
 
----@param ... unknown|? The error objects to join.
+--- Joins the error objects into a string.
+---
+---@param ... unknown|? The error objects to join. `nil` values are skipped.
+---@return string
 function M.join(...)
   -- NOTE: `:h Iter:map` skips over `nil` return values.
   local errs = vim.iter({ ... }):map(function(err) return err and tostring(err) end):totable()
