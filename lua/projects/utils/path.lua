@@ -6,11 +6,16 @@ local fmt = require("projects.utils.fmt")
 ---@field resolved boolean
 local Path = {
   __tostring = function(self) return fmt.class_string(self, "projects.Path", "path_str", "resolved") end,
-  __div = function(self, other) return self:new(other) end,
   ---@private
   ---@type table<string, uv.fs_stat.result>
   _STATUS_CACHE = {},
 }
+
+--- Syntactic sugar for concatenating paths like: `projects.Path("~") / "home.txt"`
+---
+---@param other projects.Path
+---@return projects.Path
+function Path.__div(self, other) return self:join(other) end
 
 --- Returns true if obj was created with Path.new().
 ---
@@ -28,7 +33,7 @@ end
 ---@param base projects.Path|string The base path (absolute or relative)
 ---@param ... projects.Path|string|nil Zero or more relative paths. Ignores `nil` values.
 ---@return projects.Path joined_path
-function Path.new(base, ...)
+function Path.join(base, ...)
   if select("#", ...) == 0 and Path.is_path_obj(base) then ---@cast base projects.Path
     return base
   end
@@ -47,7 +52,7 @@ end
 function Path.of_buffer(buffer_id)
   local ok, result = pcall(vim.api.nvim_buf_get_name, buffer_id or 0)
   assert(ok, fmt.call_error(tostring(result), "Path.of_buffer", buffer_id))
-  return Path.new(result)
+  return Path.join(result)
 end
 
 --- Wrapper around |stdpath|.
@@ -57,7 +62,7 @@ end
 function Path.stdpath(what, ...)
   local ok, result = pcall(vim.fn.stdpath, what)
   assert(ok, fmt.call_error(tostring(result), "Path.stdpath", what, ...))
-  return type(result) == "table" and vim.iter(result):map(Path.new):totable() or Path.new(result, ...)
+  return type(result) == "table" and vim.iter(result):map(Path.join):totable() or Path.join(result, ...)
 end
 
 --- Wrapper around |io.open|.
@@ -123,7 +128,7 @@ function Path:is_directory() return vim.fn.isdirectory(self.path_str) == 1 end
 ---@return projects.Path|?
 function Path:parent()
   local dirname = vim.fs.dirname(self.path_str)
-  return dirname and Path.new(dirname)
+  return dirname and Path.join(dirname)
 end
 
 --- Wrapper around |vim.fs.root|.
@@ -135,7 +140,7 @@ end
 ---@return projects.Path|?
 function Path:find_root(marker)
   local root = vim.fs.root(self.path_str, marker)
-  return root and Path.new(root)
+  return root and Path.join(root)
 end
 
 --- Returns true if both paths point to the same file in memory.
@@ -145,7 +150,7 @@ end
 ---@param force_sys_call? boolean Always make system calls when true, even if the paths have already been resolved.
 ---@return boolean
 function Path.is_same(arg1, arg2, force_sys_call)
-  local path1, path2 = Path.new(arg1), Path.new(arg2)
+  local path1, path2 = Path.join(arg1), Path.join(arg2)
   if path1.path_str == path2.path_str and (path1.resolved or path2.resolved) then return true end
   local stat1, stat2 = path1:status(force_sys_call), path2:status(force_sys_call and path2.path_str ~= path1.path_str)
   return stat1.dev == stat2.dev and stat1.ino == stat2.ino
