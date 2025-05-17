@@ -4,8 +4,7 @@
 
 ---@class projects.UserConfig
 ---
---- Determines where the plugin stores its persistent state.
----@field data_dir? string|fun(): string
+---@field data_dir? string|fun(): string  Determines where the plugin stores its persistent state.
 
 ---@class projects.AddProjectOpts
 

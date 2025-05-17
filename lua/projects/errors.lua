@@ -5,15 +5,15 @@ local M = {
 
   --- Terminates the last protected call with a helpful "not implemented" error.
   ---
-  ---@param func_name string The name of the function that caused the error.
-  ---@param ... any The arguments passed to the function.
-  ---@return unknown ... This function never returns, but the annotation convinces LuaLS that it does.
+  ---@param func_name string  The name of the unimplemented function.
+  ---@param ... any           The arguments passed to the function.
+  ---@return unknown ...      Although this function never returns, the annotation convinces LuaLS that it does.
   TODO = function(func_name, ...) error(fmt.call_error("not implemented", func_name, ...)) end,
 }
 
 --- Joins the error objects into a string.
 ---
----@param ... unknown|? The error objects to join. `nil` values are skipped.
+---@param ... unknown|?  The error objects to join. `nil` values are skipped.
 ---@return string
 function M.join(...)
   -- NOTE: `:h Iter:map` skips over `nil` return values.
