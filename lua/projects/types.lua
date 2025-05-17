@@ -5,6 +5,6 @@
 ---@class projects.RegisterProjectOpts
 ---@class projects.DeleteProjectOpts
 ---@class projects.GetRecentProjectsOpts
----@class projects.SetPwdOpts
+---@class projects.EnterProjectDirectoryOpts
 ---
 ---@class projects.State

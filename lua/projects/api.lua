@@ -28,9 +28,9 @@ function API:register_project(opts) return errors.TODO("register_project", self,
 ---@return boolean ok, string|? err
 function API:delete_project(opts) return errors.TODO("delete_project", self, opts) end
 
----@param opts projects.SetWorkingDirectoryOpts
+---@param opts projects.EnterProjectDirectoryOpts|?
 ---@return boolean ok, string|? err
-function API:set_working_directory(opts) return errors.TODO("set_working_directory", self, opts) end
+function API:enter_project_directory(opts) return errors.TODO("enter_project_directory", self, opts) end
 
 ---@param opts projects.GetRecentProjectsOpts|?
 ---@return boolean ok, string|? err
