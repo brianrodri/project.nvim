@@ -1,10 +1,11 @@
 local errors = require("projects.errors")
+local formats = require("projects.utils.formats")
 
 ---@class projects.Path
 ---@field path_str string
 ---@field resolved boolean
 local Path = {
-  __tostring = function(self) return string.format('Path("%s"%s)', self.path_str, self.resolved and "!" or "?") end,
+  __tostring = function(self) return formats.class_string(self, "projects.Path", "path_str", "resolved") end,
   __div = function(self, other) return self:new(other) end,
   ---@private
   ---@type table<string, uv.fs_stat.result>
