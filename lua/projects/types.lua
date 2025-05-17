@@ -2,7 +2,7 @@
 --
 ---@class projects.UserConfig
 ---
----@class projects.RegisterProjectOpts
+---@class projects.AddProjectOpts
 ---@class projects.DeleteProjectOpts
 ---@class projects.GetRecentProjectsOpts
 ---@class projects.EnterProjectDirectoryOpts
