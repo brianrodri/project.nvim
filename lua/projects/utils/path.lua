@@ -39,7 +39,7 @@ function Path.join(base, ...)
   end
   local path_parts = vim.tbl_map(function(p) return Path.is_path_obj(p) and p.path_str or p end, { base, ... })
   local ok, result = pcall(vim.fs.joinpath, unpack(path_parts))
-  assert(ok, fmt.call_error(tostring(result), "Path.new", base, ...))
+  assert(ok, fmt.call_error(result, "Path.new", base, ...))
   local self = setmetatable({}, Path)
   self.path_str = result
   self.resolved = false
@@ -51,7 +51,7 @@ end
 ---@param buffer_id? integer Use 0 for current buffer (defaults to 0)
 function Path.of_buffer(buffer_id)
   local ok, result = pcall(vim.api.nvim_buf_get_name, buffer_id or 0)
-  assert(ok, fmt.call_error(tostring(result), "Path.of_buffer", buffer_id))
+  assert(ok, fmt.call_error(result, "Path.of_buffer", buffer_id))
   return Path.join(result)
 end
 
@@ -71,7 +71,7 @@ end
 ---@overload fun(what: "config_dirs" | "data_dirs"): projects.Path[]
 function Path.stdpath(what, ...)
   local ok, result = pcall(vim.fn.stdpath, what)
-  assert(ok, fmt.call_error(tostring(result), "Path.stdpath", what, ...))
+  assert(ok, fmt.call_error(result, "Path.stdpath", what, ...))
   return type(result) == "table" and vim.iter(result):map(Path.join):totable() or Path.join(result, ...)
 end
 
