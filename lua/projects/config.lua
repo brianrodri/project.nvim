@@ -8,25 +8,30 @@ local DEFAULT_CONFIG = {
   data_dir = vim.fn.stdpath("data"),
 }
 
+---@class projects.ResolvedUserConfig: projects.UserConfig
+---@field data_dir projects.Path
+
 ---@generic T
----@type table<string, fun(opts: projects.UserConfig)>
+---@type table<string, fun(opts: projects.UserConfig, resolved: projects.ResolvedUserConfig)>
 local FIELD_RESOLVERS = {
-  data_dir = function(opts)
-    opts.data_dir = path.new(type(opts) == "string" and opts or opts.data_dir()):resolve().path_str
+  data_dir = function(opts, resolved)
+    local data_dir = assert(opts.data_dir, "value is required")
+    resolved.data_dir = path.new(type(data_dir) == "string" and data_dir or data_dir()):resolve()
   end,
 }
 
 ---@param opts? projects.UserConfig
----@return projects.UserConfig
+---@return projects.ResolvedUserConfig
 function M.resolve_opts(opts)
-  opts = vim.tbl_deep_extend("force", vim.deepcopy(DEFAULT_CONFIG), opts or {})
+  local resolved = vim.tbl_deep_extend("force", vim.deepcopy(DEFAULT_CONFIG), opts or {})
   local resolve_errors = {}
   for field, resolver in pairs(FIELD_RESOLVERS) do
     local ok, value = pcall(resolver, opts)
     if not ok then table.insert(resolve_errors, string.format('invalid "%s": %s', field, tostring(value))) end
   end
   assert(#resolve_errors == 0, errors.format_call_error(errors.join(resolve_errors), "resolve_opts", opts))
-  return opts
+  ---@cast resolved projects.ResolvedUserConfig
+  return resolved
 end
 
 return M
