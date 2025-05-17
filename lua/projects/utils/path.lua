@@ -147,17 +147,4 @@ function Path:find_root(marker)
   return root and Path.join(root)
 end
 
---- Returns true if both paths point to the same file in memory.
----
----@param arg1 projects.Path|string
----@param arg2 projects.Path|string
----@param force_sys_call? boolean    Always make system calls when true, even if the paths have already been resolved.
----@return boolean
-function Path.is_same(arg1, arg2, force_sys_call)
-  local path1, path2 = Path.join(arg1), Path.join(arg2)
-  if path1.path == path2.path and (path1.resolved or path2.resolved) then return true end
-  local stat1, stat2 = path1:status(force_sys_call), path2:status(force_sys_call and path2.path ~= path1.path)
-  return stat1.dev == stat2.dev and stat1.ino == stat2.ino
-end
-
 return Path
