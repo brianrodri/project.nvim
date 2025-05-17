@@ -30,7 +30,7 @@ function M.resolve_opts(opts)
   local resolved = vim.tbl_deep_extend("force", vim.deepcopy(DEFAULT_CONFIG), opts or {})
   local resolve_errors = {}
   for field, resolver in pairs(FIELD_RESOLVERS) do
-    local ok, value = pcall(resolver, opts)
+    local ok, value = pcall(resolver, opts, opts)
     if not ok then table.insert(resolve_errors, string.format('invalid "%s": %s', field, vim.inspect(value))) end
   end
   assert(#resolve_errors == 0, fmt.call_error(errors.join(resolve_errors), "resolve_opts", opts))
