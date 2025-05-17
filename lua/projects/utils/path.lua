@@ -81,14 +81,8 @@ function Path:with_file(mode, file_consumer)
   assert(call_ok and close_ok, fmt.call_error(root_cause, "Path.with_file", self, mode, file_consumer))
 end
 
---- Wrapper around |fs_mkdir()|.
----
----@param mode? integer  octal `chmod(1)` mode. Default value is 448 (`0700` in octal), i.e. only user has full access.
----                      See: https://quickref.me/chmod.html.
-function Path:make_directory(mode)
-  local ok, err = vim.uv.fs_mkdir(self.path, mode or 448)
-  assert(ok, fmt.call_error(err, "Path.make_directory", self, mode))
-end
+--- Wrapper around |mkdir()|.
+function Path:make_directory() return vim.fn.mkdir(self.path, "p") == 1 end
 
 --- Wrapper around |fs_realpath()|.
 ---
