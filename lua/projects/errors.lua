@@ -1,14 +1,14 @@
 local fmt = require("projects.utils.fmt")
 
 local M = {
+  -- NOTE: TODO's definition is intentionally inconsistent so that tools don't consider it to be an _actual_ TODO.
+
   --- Terminates the last protected call with a helpful "not implemented" error.
   ---
   ---@param func_name string The name of the function that caused the error.
   ---@param ... any The arguments passed to the function.
   ---@return unknown ... This function never returns, but the annotation convinces LuaLS that it does.
   TODO = function(func_name, ...) error(fmt.call_error("not implemented", func_name, ...)) end,
-
-  -- NOTE: TODO's definition is intentionally inconsistent so that tools don't consider it as an _actual_ TODO.
 }
 
 --- Joins the error objects into a string.
