@@ -1,4 +1,4 @@
-local errors = require("projects.utils.errors")
+local errors = require("projects.errors")
 
 ---@class projects.Path
 ---@field path_str string
@@ -16,23 +16,24 @@ local Path = {
 ---@overload fun(obj: unknown): boolean
 ---@overload fun(obj: projects.Path): true
 function Path.is_path_obj(obj)
-  if getmetatable(obj) == Path then
-    return true ---@cast obj projects.Path
+  if getmetatable(obj) == Path then ---@cast obj projects.Path
+    return true
   end
   return false
 end
 
 --- Wrapper around |vim.fs.joinpath|.
 ---
----@param maybe_path projects.Path|string The base path (absolute or relative)
+---@param base projects.Path|string The base path (absolute or relative)
 ---@param ... projects.Path|string|nil Zero or more relative paths. Ignores `nil` values.
 ---@return projects.Path joined_path
-function Path.new(maybe_path, ...)
-  ---@diagnostic disable-next-line: return-type-mismatch
-  if Path.is_path_obj(maybe_path) and select("#", ...) == 0 then return maybe_path end
-  local path_parts = vim.tbl_map(function(p) return Path.is_path_obj(p) and p.path_str or p end, { maybe_path, ... })
+function Path.new(base, ...)
+  if select("#", ...) == 0 and Path.is_path_obj(base) then ---@cast base projects.Path
+    return base
+  end
+  local path_parts = vim.tbl_map(function(p) return Path.is_path_obj(p) and p.path_str or p end, { base, ... })
   local ok, result = pcall(vim.fs.joinpath, unpack(path_parts))
-  assert(ok, errors.format_call_error(tostring(result), "Path.new", maybe_path, ...))
+  assert(ok, errors.format_call_error(tostring(result), "Path.new", base, ...))
   local self = setmetatable({}, Path)
   self.path_str = result
   self.resolved = false
@@ -91,7 +92,7 @@ end
 
 --- Wrapper around |vim.fn.isdirectory|.
 ---
---- @return boolean
+---@return boolean
 function Path:is_directory() return vim.fn.isdirectory(self.path_str) == 1 end
 
 --- Wrapper around |vim.fs.dirname|.
@@ -107,7 +108,7 @@ end
 ---@param marker
 ---| string A marker to search for.
 ---| string[] A list of markers to search for.
----| fun(name: string, path: string): boolean A binary predicate function.
+---| fun(name: string, path: string): boolean A function that returns true when matched.
 ---@return projects.Path|?
 function Path:find_root(marker)
   local root = vim.fs.root(self.path_str, marker)
@@ -123,8 +124,7 @@ end
 function Path.is_same(arg1, arg2, force_sys_call)
   local path1, path2 = Path.new(arg1), Path.new(arg2)
   if path1.path_str == path2.path_str and (path1.resolved or path2.resolved) then return true end
-  local stat1 = path1:status(force_sys_call)
-  local stat2 = path2:status(force_sys_call and path2.path_str ~= path1.path_str)
+  local stat1, stat2 = path1:status(force_sys_call), path2:status(force_sys_call and path2.path_str ~= path1.path_str)
   return stat1.dev == stat2.dev and stat1.ino == stat2.ino
 end
 
