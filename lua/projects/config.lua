@@ -12,7 +12,7 @@ local M = {}
 
 ---@type projects.UserConfig
 local DEFAULT_CONFIG = {
-  data_dir = vim.fn.stdpath("data"),
+  data_dir = vim.fn.stdpath("data") .. "/projects.nvim",
 }
 
 ---@generic T
