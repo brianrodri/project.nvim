@@ -86,7 +86,7 @@ end
 ---@param mode? integer  octal `chmod(1)` mode. Default value is 448 (`0700` in octal), i.e. only user has full access.
 ---                      See: https://quickref.me/chmod.html.
 function Path:make_directory(mode)
-  local ok, err = pcall(vim.uv.fs_mkdir, self.path, mode or 448)
+  local ok, err = vim.uv.fs_mkdir(self.path, mode or 448)
   assert(ok, fmt.call_error(err, "Path.make_directory", self, mode))
 end
 
@@ -99,8 +99,8 @@ end
 function Path:resolve(force_sys_call)
   if not self.resolved or force_sys_call then
     self.resolved = false
-    local realpath, err, err_name = vim.uv.fs_realpath(self.path)
-    assert(realpath, fmt.call_error(string.format("%s: %s", err_name, err), "Path.resolve", self))
+    local realpath, err = vim.uv.fs_realpath(self.path)
+    assert(realpath, fmt.call_error(err, "Path.resolve", self))
     self.path, self.resolved = realpath, true
   end
   return self
@@ -114,8 +114,8 @@ function Path:status(force_sys_call)
   assert(self.resolved, fmt.call_error("Path.resolve() needs to be called first", "Path.status", self))
   if not Path.global_status_cache[self.path] or force_sys_call then
     Path.global_status_cache[self.path] = nil
-    local stat, err, err_name = vim.uv.fs_stat(self.path)
-    assert(stat, fmt.call_error(string.format("%s: %s", err_name, err), "Path.status", self))
+    local stat, err = vim.uv.fs_stat(self.path)
+    assert(stat, fmt.call_error(err, "Path.status", self))
     Path.global_status_cache[self.path] = stat
   end
   return Path.global_status_cache[self.path]
