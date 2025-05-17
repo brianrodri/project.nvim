@@ -1,5 +1,14 @@
 local M = {}
 
+---@param ... unknown|? The error objects to join.
+function M.join(...)
+  -- NOTE: `:h Iter:map` skips over `nil` return values.
+  local errs = vim.iter({ ... }):map(function(err) return err and tostring(err) end):totable()
+  if #errs == 0 then return "" end
+  if #errs == 1 then return errs[1] end
+  return vim.iter(errs):map(function(err) return "\t" .. err end):join("\n")
+end
+
 --- Returns a helpful error message with debug info about the function call responsible.
 ---
 ---@param err unknown The error object.
