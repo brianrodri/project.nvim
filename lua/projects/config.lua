@@ -1,4 +1,5 @@
 local errors = require("projects.errors")
+local fmt = require("projects.utils.fmt")
 local path = require("projects.utils.path")
 
 local M = {}
@@ -29,7 +30,7 @@ function M.resolve_opts(opts)
     local ok, value = pcall(resolver, opts)
     if not ok then table.insert(resolve_errors, string.format('invalid "%s": %s', field, tostring(value))) end
   end
-  assert(#resolve_errors == 0, errors.format_call_error(errors.join(resolve_errors), "resolve_opts", opts))
+  assert(#resolve_errors == 0, fmt.call_error(errors.join(resolve_errors), "resolve_opts", opts))
   ---@cast resolved projects.ResolvedUserConfig
   return resolved
 end

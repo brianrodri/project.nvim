@@ -1,12 +1,12 @@
 local errors = require("projects.errors")
-local formats = require("projects.utils.formats")
+local fmt = require("projects.utils.fmt")
 
 ---@class projects.State
 ---@field opts projects.UserConfig
 local State = {}
 
 ---@return string
-function State:__tostring() return formats.class_string(self, "projects.State", "state_path", "history_path") end
+function State:__tostring() return fmt.class_string(self, "projects.State", "state_path", "history_path") end
 
 ---@param opts? projects.UserConfig
 ---@return projects.State
