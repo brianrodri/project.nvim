@@ -5,7 +5,7 @@ local fmt = require("projects.utils.fmt")
 ---@field path string
 ---@field resolved boolean
 local Path = {
-  -- NOTE: Not using `errors.class_string` so that `tostring(projects.Path)` can be used for conversions.
+  -- NOTE: Returning `path` directly so that `tostring(projects.Path)` is interchangeable with `tostring(path_string)`.
   __tostring = function(self) return self.path end,
 
   ---@private
@@ -13,16 +13,15 @@ local Path = {
   global_status_cache = {},
 }
 
---- Returns true if obj was created with Path.new().
----
 ---@param obj any
+---@return boolean is_path_obj  True if and only if `obj` is an instance of `projects.Path`.
 function Path.is_path_obj(obj)
   if getmetatable(obj) ~= Path then return false end
   ---@cast obj projects.Path
   return true
 end
 
---- Wrapper around |vim.fs.joinpath|.
+--- Wrapper around |vim.fs.joinpath()|.
 ---
 --- NOTE: This function is the "constructor" of this class!
 ---
@@ -71,7 +70,7 @@ function Path.stdpath(what)
   return type(result) == "table" and vim.iter(result):map(Path.join):totable() or Path.join(result)
 end
 
---- Wrapper around |io.open| to ensure that |file:close()| is always called.
+--- Wrapper around |io.open()| to ensure that |file:close()| is always called.
 ---
 ---@param mode openmode
 ---@param file_consumer fun(path: file*)
@@ -84,7 +83,7 @@ function Path:with_file(mode, file_consumer)
   assert(call_ok and close_ok, fmt.call_error(root_cause, "Path.with_file", self, mode, file_consumer))
 end
 
---- Wrapper around |fs_mkdir|.
+--- Wrapper around |fs_mkdir()|.
 ---
 ---@param mode? integer  octal `chmod(1)` mode. Default value is 448 (`0700` in octal), i.e. only user has full access.
 ---                      See: https://quickref.me/chmod.html.
@@ -93,7 +92,7 @@ function Path:make_directory(mode)
   assert(ok, fmt.call_error(err, "Path.make_directory", self, mode))
 end
 
---- Wrapper around |fs_realpath|.
+--- Wrapper around |fs_realpath()|.
 ---
 --- NOTE: This mutates `self`!
 ---
@@ -109,7 +108,7 @@ function Path:resolve(force_sys_call)
   return self
 end
 
---- Wrapper around |fs_stat|.
+--- Wrapper around |fs_stat()|.
 ---
 ---@param force_sys_call? boolean  Always make system calls when true, even if the status has already been resolved.
 ---@return uv.fs_stat.result
@@ -124,12 +123,12 @@ function Path:status(force_sys_call)
   return Path.global_status_cache[self.path]
 end
 
---- Wrapper around |vim.fn.isdirectory|.
+--- Wrapper around |isdirectory()|.
 ---
 ---@return boolean
 function Path:is_directory() return vim.fn.isdirectory(self.path) == 1 end
 
---- Wrapper around |vim.fs.dirname|.
+--- Wrapper around |vim.fs.dirname()|.
 ---
 ---@return projects.Path|?
 function Path:parent()
@@ -137,7 +136,7 @@ function Path:parent()
   return dirname and Path.join(dirname)
 end
 
---- Wrapper around |vim.fs.root|.
+--- Wrapper around |vim.fs.root()|.
 ---
 ---@param marker
 ---| string                             A marker to search for.
