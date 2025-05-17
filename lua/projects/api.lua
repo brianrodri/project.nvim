@@ -1,4 +1,4 @@
-local errors = require("projects.errors")
+local errors = require("projects.utils.errors")
 local state = require("projects.state")
 
 local M = {
