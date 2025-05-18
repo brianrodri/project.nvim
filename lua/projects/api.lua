@@ -1,12 +1,12 @@
-local errors = require("projects.utils.errors")
-local state = require("projects.state")
+local Errs = require("projects.utils.errs")
+local State = require("projects.state")
 
 local M = {
   --- Global plugin state.
   ---
   ---@private
   ---@type projects.State
-  global_state = state.init(),
+  global_state = State.init(),
 }
 
 ---@param opts? projects.UserConfig
@@ -22,10 +22,10 @@ function M.delete_project(opts) return pcall(M.global_state.delete_project, M.gl
 
 ---@param opts projects.EnterProjectDirectoryOpts|?
 ---@return boolean ok, unknown|? err
-function M.enter_project_directory(opts) return errors.TODO("API.enter_project_directory", opts) end
+function M.enter_project_directory(opts) return Errs.TODO("API.enter_project_directory", opts) end
 
 ---@param opts projects.GetRecentProjectsOpts|?
 ---@return boolean ok, unknown|? err
-function M.get_recent_projects(opts) return errors.TODO("API.get_recent_projects", opts) end
+function M.get_recent_projects(opts) return Errs.TODO("API.get_recent_projects", opts) end
 
 return M
