@@ -103,8 +103,11 @@ function Path:with_file(mode, file_consumer)
   assert(file, Fmts.call_error(open_err, "Path.with_file", self, mode, file_consumer))
   local call_ok, call_err = pcall(file_consumer, file)
   local close_ok, close_err, close_err_code = file:close()
-  local root_cause = Errs.join(call_err, close_err and string.format("%s(%d)", close_err, close_err_code))
-  assert(call_ok and close_ok, Fmts.call_error(root_cause, "Path.with_file", self, mode, file_consumer))
+  local root_cause = Errs.join(
+    not call_ok and call_err or nil,
+    not close_ok and string.format("%s(%d)", close_err, close_err_code) or nil
+  )
+  assert(vim.fn.empty(root_cause) == 1, Fmts.call_error(root_cause, "Path.with_file", self, mode, file_consumer))
 end
 
 --- Wrapper around |mkdir()|.

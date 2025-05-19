@@ -10,8 +10,9 @@ local DEFAULT_OPTS = {
 }
 
 local FIELD_RESOLVERS = {
-  data_dir = function(data_dir_value)
-    return Path.join(type(data_dir_value) == "string" and data_dir_value or data_dir_value()):resolve()
+  data_dir = function(value)
+    assert(value, "value is required")
+    return Path.join(type(value) == "string" and value or value()):resolve()
   end,
 }
 
@@ -30,7 +31,7 @@ function Config.resolve_opts(...)
       return not ok and Fmts.assign_error(err, field, unresolved[field]) or nil
     end)
     :totable()
-  assert(#failures == 0, Fmts.call_error(Errs.join(failures), "resolve_opts", ...))
+  assert(#failures == 0, Fmts.call_error(Errs.join(unpack(failures)), "resolve_opts", ...))
   return resolved
 end
 
