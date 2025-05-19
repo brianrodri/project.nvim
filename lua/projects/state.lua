@@ -7,9 +7,9 @@ local PERSISTED_STATE_PATH = "projects.nvim/persisted-state.json"
 ---@class projects.State
 ---@field state_path projects.Path
 ---@field resolved boolean
-local State = {
-  __tostring = function(self) return Fmts.class_string(self, "projects.State", "state_path", "resolved") end,
-}
+local State = {}
+State.__index = State
+State.__tostring = function(self) return Fmts.class_string(self, "projects.State", "state_path", "resolved") end
 
 function State.init()
   local self = setmetatable({}, State)
