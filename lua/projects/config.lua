@@ -3,12 +3,6 @@ local Path = require("projects.utils.path")
 
 local M = {}
 
----@class projects.UserConfig
----@field data_dir? string|fun(): string  Determines where the plugin stores its persistent state.
-
----@class projects.ResolvedConfig: projects.UserConfig
----@field data_dir projects.Path
-
 ---@type projects.UserConfig
 local DEFAULT_CONFIG = {
   data_dir = vim.fn.stdpath("data") .. "/projects.nvim",
