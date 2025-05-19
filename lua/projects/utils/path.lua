@@ -69,8 +69,8 @@ function Path:basename() return vim.fs.basename(self.path) end
 ---@return string|? stem
 function Path:stem()
   local basename = self:basename()
-  if not basename then return nil end
-  local parts = vim.iter(vim.split(basename, "."))
+  local parts = vim.iter(vim.split(basename or "", "."))
+  if #parts < 2 then return basename end
   parts:pop()
   return parts:join(".")
 end
@@ -115,14 +115,11 @@ function Path:make_directory() return vim.fn.mkdir(self.path, "p") == 1 end
 
 --- Wrapper around |fs_realpath()|.
 ---
---- NOTE: This mutates `self`!
----
 ---@return projects.Path
 function Path:resolve()
   local realpath, err = vim.uv.fs_realpath(self.path)
   assert(realpath, Fmts.call_error(err, "Path.resolve", self))
-  self.path = realpath
-  return self
+  return Path.join(realpath)
 end
 
 --- Wrapper around |isdirectory()|.
