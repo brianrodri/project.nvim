@@ -83,7 +83,7 @@ function Path:with_file(mode, file_consumer)
   return result
 end
 
---- Wrapper around |mkdir()|.
+--- Wrapper around |mkdir()| with the `-p` flag set.
 function Path:make_directory() return vim.fn.mkdir(self.path, "p") == 1 end
 
 --- Wrapper around |fs_realpath()|.

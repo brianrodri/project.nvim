@@ -14,13 +14,23 @@ end
 
 --- Provides consistent formatting for errors raised by functions.
 ---
----@param err unknown         The error object.
----@param func_name string    The name of the function that caused the error.
+---@param err unknown         The error.
+---@param func_name string    The name of the function.
 ---@param ... any             The arguments passed to the function.
 ---@return string call_error  A helpful error message with debug info about the call responsible.
 function M.call_error(err, func_name, ...)
   local debug_args = vim.fn.join(vim.tbl_map(vim.inspect, { ... }), ", ")
   return string.format("%s(%s) error: %s", func_name, debug_args, tostring(err))
+end
+
+--- Provides consistent formatting for errors raised by invalid assignments.
+---
+---@param err unknown           The error.
+---@param field_name string     The name of the field.
+---@param field_value any       The bad value assigned to the field.
+---@return string assign_error  A helpful error message with debug info about the assignment responsible.
+function M.assign_error(err, field_name, field_value)
+  return string.format("%s = %s error: %s", field_name, vim.inspect(field_value), tostring(err))
 end
 
 return M
