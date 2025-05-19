@@ -1,6 +1,6 @@
-local fmt = require("projects.utils.fmt")
+local Fmts = require("projects.utils.fmts")
 
-local M = {
+local Errs = {
   -- NOTE: TODO's definition is intentionally inconsistent so that tools don't consider it to be an _actual_ TODO.
 
   --- Terminates the last protected call with a helpful "not implemented" error.
@@ -8,14 +8,14 @@ local M = {
   ---@param func_name string  The name of the unimplemented function.
   ---@param ... any           The arguments passed to the function.
   ---@return unknown ...      Although this function never returns, the annotation convinces LuaLS that it does.
-  TODO = function(func_name, ...) error(fmt.call_error("not implemented", func_name, ...)) end,
+  TODO = function(func_name, ...) error(Fmts.call_error("not implemented", func_name, ...)) end,
 }
 
 --- Joins the error objects into a string. Returns `nil` when no errors are passed.
 ---
 ---@param ... unknown|?  The error objects to join. `nil` values are skipped.
 ---@return string|?
-function M.join(...)
+function Errs.join(...)
   -- NOTE: `:h Iter:map()` skips over `nil` return values.
   local errs = vim.iter({ ... }):map(function(err) return err and tostring(err) end):totable()
   if #errs == 0 then return nil end
@@ -23,4 +23,4 @@ function M.join(...)
   return vim.iter(errs):map(function(err) return "\t" .. err end):join("\n")
 end
 
-return M
+return Errs

@@ -1,44 +1,38 @@
-local errors = require("projects.utils.errors")
-local path = require("projects.utils.path")
+local Errs = require("projects.utils.errs")
+local Fmts = require("projects.utils.fmts")
+local Path = require("projects.utils.path")
 
-local M = {}
+local Config = {}
 
----@class projects.UserConfig
----@field data_dir? string|fun(): string  Determines where the plugin stores its persistent state.
-
----@class projects.ResolvedConfig: projects.UserConfig
----@field data_dir projects.Path
-
----@type projects.UserConfig
-local DEFAULT_CONFIG = {
+---@type projects.UserOpts
+local DEFAULT_OPTS = {
   data_dir = vim.fn.stdpath("data") .. "/projects.nvim",
 }
 
----@type table<string, fun(opts: projects.UserConfig, resolved: projects.ResolvedConfig)>
 local FIELD_RESOLVERS = {
-  data_dir = function(opts, resolved)
-    local opts_data_dir = assert(opts.data_dir, "value is required")
-    local resolved_data_dir = path.join(type(opts_data_dir) == "string" and opts_data_dir or opts_data_dir())
-    assert(resolved_data_dir:make_directory(), string.format("error making directory: %s", tostring(resolved_data_dir)))
-    resolved.data_dir = resolved_data_dir
+  data_dir = function(value)
+    assert(value, "value is required")
+    return Path.join(type(value) == "string" and value or value()):resolve()
   end,
 }
 
----@param opts? projects.UserConfig
----@return projects.ResolvedConfig
-function M.resolve_opts(opts)
-  opts = vim.tbl_deep_extend("force", vim.deepcopy(DEFAULT_CONFIG), opts or {})
+--- Returns a validated projects.ResolvedConfig from inputs. Otherwise, terminates with a comprehensive error message.
+---
+---@param ... projects.UserOpts zero or more opts merged with |vim.tbl_deep_extend()| and `"keep"`.
+---@return projects.Config
+function Config.resolve_opts(...)
+  ---@type projects.UserOpts
+  local unresolved = vim.tbl_deep_extend("keep", {}, ..., DEFAULT_OPTS)
   local resolved = {}
-  local resolve_errors = {}
-  for field, resolver in pairs(FIELD_RESOLVERS) do
-    local ok, err = pcall(resolver, opts, resolved)
-    if not ok then
-      table.insert(resolve_errors, string.format("invalid %s = %s: %s", field, vim.inspect(opts[field]), tostring(err)))
-    end
-  end
-  assert(#resolve_errors == 0, string.format("failed to resolve UserConfig: %s", errors.join(resolve_errors)))
-  ---@cast resolved projects.ResolvedConfig
+  local failures = vim
+    .iter(pairs(FIELD_RESOLVERS))
+    :map(function(field, resolver)
+      local ok, err = pcall(function() resolved[field] = resolver(unresolved[field]) end)
+      return not ok and Fmts.assign_error(err, field, unresolved[field]) or nil
+    end)
+    :totable()
+  assert(#failures == 0, Fmts.call_error(Errs.join(unpack(failures)), "resolve_opts", ...))
   return resolved
 end
 
-return M
+return Config
