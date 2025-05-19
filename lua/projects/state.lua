@@ -21,10 +21,10 @@ end
 ---@param opts? projects.UserConfig
 function State:resolve(opts) Errs.TODO("State.resolve", self, opts) end
 
----@param opts projects.AddProjectOpts
+---@param opts? projects.AddProjectOpts
 function State:add_project(opts) Errs.TODO("State.add_project", self, opts) end
 
----@param opts projects.DeleteProjectOpts
+---@param opts? projects.DeleteProjectOpts
 function State:delete_project(opts) Errs.TODO("State.delete_project", self, opts) end
 
 return State
