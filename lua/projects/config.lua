@@ -2,7 +2,7 @@ local Errs = require("projects.utils.errs")
 local Fmts = require("projects.utils.fmts")
 local Path = require("projects.utils.path")
 
-local M = {}
+local Config = {}
 
 ---@type projects.UserConfig
 local DEFAULT_OPTS = {
@@ -19,7 +19,7 @@ local FIELD_RESOLVERS = {
 ---
 ---@param ... projects.UserConfig zero or more opts merged with |vim.tbl_deep_extend()| and `"keep"`.
 ---@return projects.ResolvedConfig
-function M.resolve_opts(...)
+function Config.resolve_opts(...)
   ---@type projects.UserConfig
   local unresolved = vim.tbl_deep_extend("keep", {}, ..., DEFAULT_OPTS)
   local resolved = {}
@@ -34,4 +34,4 @@ function M.resolve_opts(...)
   return resolved
 end
 
-return M
+return Config
