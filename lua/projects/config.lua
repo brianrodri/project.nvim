@@ -9,7 +9,6 @@ local DEFAULT_OPTS = {
   data_dir = vim.fn.stdpath("data") .. "/projects.nvim",
 }
 
----@type table<string, projects.UserConfig.Resolver>
 local FIELD_RESOLVERS = {
   data_dir = function(data_dir_value)
     return Path.join(type(data_dir_value) == "string" and data_dir_value or data_dir_value()):resolve()
