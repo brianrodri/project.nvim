@@ -12,7 +12,7 @@ function State.init() return setmetatable({}, State) end
 ---@return boolean
 function State.is_state_obj(obj) return getmetatable(obj) == State end
 
----@param opts? projects.UserConfig
+---@param opts? projects.UserOpts
 function State:resolve(opts) Errs.TODO("State.resolve", self, opts) end
 
 ---@param opts? projects.AddProjectOpts

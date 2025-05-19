@@ -9,7 +9,7 @@ local API = {
   global_state = State.init(),
 }
 
----@param opts? projects.UserConfig
+---@param opts? projects.UserOpts
 function API.setup(opts) API.global_state:resolve(opts) end
 
 ---@param opts? projects.AddProjectOpts

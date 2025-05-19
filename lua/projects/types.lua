@@ -1,10 +1,12 @@
 -- TODO: Define types.
 
----@class projects.UserConfig
----@field data_dir? string|fun(): string  Determines where the plugin stores its persistent state.
+---@class projects.State
 
----@class projects.ResolvedConfig: projects.UserConfig
----@field data_dir  projects.Path
+---@class projects.Config
+---@field data_dir  projects.Path  Determines where the plugin stores its persistent state.
+
+---@class projects.UserOpts: projects.Config
+---@field data_dir? string|fun(): string
 
 ---@class projects.AddProjectOpts
 
@@ -13,5 +15,3 @@
 ---@class projects.GetRecentProjectsOpts
 
 ---@class projects.EnterProjectDirectoryOpts
-
----@class projects.State
