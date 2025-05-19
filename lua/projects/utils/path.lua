@@ -3,23 +3,15 @@ local Fmts = require("projects.utils.fmts")
 
 ---@class projects.Path
 ---@field path string
----@field resolved boolean
-local Path = {
-  -- NOTE: Returning `path` directly so that `tostring(projects.Path)` is interchangeable with `tostring(path_string)`.
-  __tostring = function(self) return self.path end,
+local Path = {}
 
-  ---@private
-  ---@type table<string, uv.fs_stat.result>
-  global_status_cache = {},
-}
+Path.__index = Path
+Path.__tostring = function(self) return self.path end
+Path.__eq = function(self, obj) return Path.is_path_obj(self) and Path.is_path_obj(obj) and self.path == obj.path end
 
 ---@param obj any
----@return boolean is_path_obj  True if and only if `obj` is an instance of `projects.Path`.
-function Path.is_path_obj(obj)
-  if getmetatable(obj) ~= Path then return false end
-  ---@cast obj projects.Path
-  return true
-end
+---@return boolean is_path_obj
+function Path.is_path_obj(obj) return getmetatable(obj) == Path end
 
 --- Wrapper around |vim.fs.joinpath()|. Terminates with an error if no paths are provided.
 ---
@@ -35,7 +27,6 @@ function Path.join(...)
   assert(ok, Fmts.call_error(result, "Path.join", ...))
   local self = setmetatable({}, Path)
   self.path = result
-  self.resolved = false
   return self
 end
 
@@ -68,53 +59,67 @@ function Path.stdpath(what)
   return type(result) == "table" and vim.iter(result):map(Path.join):totable() or Path.join(result)
 end
 
+--- Wrapper around |vim.fs.basename()|.
+---
+---@return string|? basename
+function Path:basename() return vim.fs.basename(self.path) end
+
+--- Returns the |vim.fs.basename()| without the extension (i.e. the text after and including the final ".").
+---
+---@return string|? stem
+function Path:stem()
+  local basename = self:basename()
+  if not basename then return nil end
+  local parts = vim.iter(vim.split(basename, "."))
+  parts:pop()
+  return parts:join(".")
+end
+
+--- Wrapper around |vim.fs.dirname()|.
+---
+---@return projects.Path|? dirname
+function Path:dirname()
+  local dirname = vim.fs.dirname(self.path)
+  return dirname and Path.join(dirname)
+end
+
+--- Wrapper around |vim.fs.normalize()|.
+---
+---@param opts? vim.fs.normalize.Opts
+---@return projects.Path normalized_path
+function Path:normalize(opts) return Path.join(vim.fs.normalize(self.path, opts)) end
+
+--- Wrapper around |uv.fs_stat()|.
+---
+---@return boolean exists
+function Path:exists() return vim.uv.fs_stat(self.path) ~= nil end
+
 --- Wrapper around |io.open()| to ensure that |file:close()| is always called.
 ---
----@generic T
 ---@param mode openmode
----@param file_consumer fun(path: file*): T
+---@param file_consumer fun(path: file*)
 function Path:with_file(mode, file_consumer)
   local file, open_err = io.open(self.path, mode)
   assert(file, Fmts.call_error(open_err, "Path.with_file", self, mode, file_consumer))
-  local call_ok, result = pcall(file_consumer, file)
+  local call_ok, call_err = pcall(file_consumer, file)
   local close_ok, close_err, close_err_code = file:close()
-  local root_cause = Errs.join(result, close_err and string.format("%s(%d)", close_err, close_err_code))
+  local root_cause = Errs.join(call_err, close_err and string.format("%s(%d)", close_err, close_err_code))
   assert(call_ok and close_ok, Fmts.call_error(root_cause, "Path.with_file", self, mode, file_consumer))
-  return result
 end
 
---- Wrapper around |mkdir()| with the `-p` flag set.
+--- Wrapper around |mkdir()|.
 function Path:make_directory() return vim.fn.mkdir(self.path, "p") == 1 end
 
 --- Wrapper around |fs_realpath()|.
 ---
 --- NOTE: This mutates `self`!
 ---
----@param force_sys_call? boolean  Always make system calls when true, even if the path has already been resolved.
 ---@return projects.Path
-function Path:resolve(force_sys_call)
-  if not self.resolved or force_sys_call then
-    self.resolved = false
-    local realpath, err = vim.uv.fs_realpath(self.path)
-    assert(realpath, Fmts.call_error(err, "Path.resolve", self))
-    self.path, self.resolved = realpath, true
-  end
+function Path:resolve()
+  local realpath, err = vim.uv.fs_realpath(self.path)
+  assert(realpath, Fmts.call_error(err, "Path.resolve", self))
+  self.path = realpath
   return self
-end
-
---- Wrapper around |fs_stat()|.
----
----@param force_sys_call? boolean  Always make system calls when true, even if the status has already been resolved.
----@return uv.fs_stat.result
-function Path:status(force_sys_call)
-  assert(self.resolved, Fmts.call_error("Path.resolve() needs to be called first", "Path.status", self))
-  if not Path.global_status_cache[self.path] or force_sys_call then
-    Path.global_status_cache[self.path] = nil
-    local stat, err = vim.uv.fs_stat(self.path)
-    assert(stat, Fmts.call_error(err, "Path.status", self))
-    Path.global_status_cache[self.path] = stat
-  end
-  return Path.global_status_cache[self.path]
 end
 
 --- Wrapper around |isdirectory()|.
@@ -127,7 +132,7 @@ function Path:is_directory() return vim.fn.isdirectory(self.path) == 1 end
 ---@return projects.Path|?
 function Path:parent()
   local dirname = vim.fs.dirname(self.path)
-  return dirname and Path.join(dirname)
+  return dirname and Path.join(dirname) or nil
 end
 
 --- Wrapper around |vim.fs.root()|.
@@ -138,15 +143,9 @@ end
 ---| fun(path: projects.Path): boolean  A function that returns true if matched.
 ---@return projects.Path|?
 function Path:find_root(marker)
-  ---@type string|string[]|fun(name: string, path: string): boolean
-  local resolved_marker
-  if type(marker) == "string" or type(marker) == "table" then
-    resolved_marker = marker
-  else
-    resolved_marker = function(_, path) return marker(Path.join(path)) end
-  end
+  local resolved_marker = vim.is_callable(marker) and function(_, path) return marker(Path.join(path)) end or marker
   local root = vim.fs.root(self.path, resolved_marker)
-  return root and Path.join(root)
+  return root and Path.join(root) or nil
 end
 
 return Path
