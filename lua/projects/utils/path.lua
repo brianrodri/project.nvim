@@ -16,7 +16,7 @@ function Path.is_path_obj(obj) return getmetatable(obj) == Path end
 ---
 ---@param base projects.Path|string   An absolute or relative path.
 ---@param ... projects.Path|string|?  Zero or more relative paths. `nil`s are skipped.
----@return projects.Path
+---@return projects.Path new_path
 function Path.new(base, ...)
   assert(type(base) == "string" or Path.is_path_obj(base), Fmts.call_error("base not a path", "Path.new", base, ...))
   if type(base) ~= "string" and select("#", ...) == 0 then return base end
@@ -28,7 +28,8 @@ end
 --- Wrapper around |nvim_buf_get_name|.
 ---
 ---@param buffer_id? integer  Use 0 for current buffer (defaults to 0).
-function Path.of_buf(buffer_id) return Path.new(vim.api.nvim_buf_get_name(buffer_id or 0)) end
+---@return projects.Path buffer_path
+function Path.of_buffer(buffer_id) return Path.new(vim.api.nvim_buf_get_name(buffer_id or 0)) end
 
 --- Wrapper around |stdpath|.
 ---
@@ -42,8 +43,8 @@ function Path.of_buf(buffer_id) return Path.new(vim.api.nvim_buf_get_name(buffer
 ---| "run"          Run directory: temporary, local storage for sockets, named pipes, etc.
 ---| "state"        Session state directory: storage for file drafts, swap, undo, |shada|.
 ---
----@overload fun(what: "cache" | "config" | "data" | "log" | "run" | "state"): projects.Path
----@overload fun(what: "config_dirs" | "data_dirs"): projects.Path[]
+---@overload fun(what: "cache" | "config" | "data" | "log" | "run" | "state"): stdpath: projects.Path
+---@overload fun(what: "config_dirs" | "data_dirs"): stdpaths: projects.Path[]
 function Path.stdpath(what)
   local result = vim.fn.stdpath(what)
   return type(result) == "table" and vim.tbl_map(Path.new, result) or Path.new(result)
@@ -80,7 +81,7 @@ function Path:exists() return vim.uv.fs_stat(self.path) ~= nil end
 
 --- Wrapper around |fs_realpath()|.
 ---
----@return projects.Path
+---@return projects.Path resolved_path
 function Path:resolve()
   local realpath, err = vim.uv.fs_realpath(self.path)
   assert(realpath, Fmts.call_error(err, "fs_realpath", self.path))
@@ -110,7 +111,7 @@ end
 
 --- Wrapper around |isdirectory()|.
 ---
----@return boolean
+---@return boolean is_directory
 function Path:is_directory() return vim.fn.isdirectory(self.path) == 1 end
 
 --- Wrapper around |mkdir()|.
@@ -124,7 +125,7 @@ function Path:make_directory() return vim.fn.mkdir(self.path, "p") == 1 end
 ---| string                             A marker to search for.
 ---| string[]                           A list of markers to search for.
 ---| fun(path: projects.Path): boolean  A function that returns true if matched.
----@return projects.Path|?
+---@return projects.Path|? root_path
 function Path:find_root(marker)
   local marker_wrapper = vim.is_callable(marker) and function(_, path) return marker(Path.new(path)) end or marker
   local root = vim.fs.root(self.path, marker_wrapper)
