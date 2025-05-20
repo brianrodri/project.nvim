@@ -1,36 +1,32 @@
 local Fmts = {}
 
 ---@class fmts.IndentOpts
-local defaults = {
-  --- Prepended to the first line of each message. Uses `"- "` by default.
-  line1_indent = "- ",
-  --- Prepended to the subsequent lines of each message. Uses `"  "` by default.
-  lineN_indent = "  ",
-}
+---@field line1_indent string  Prepended to the first line of each message. Uses `"- "` by default.
+---@field lineN_indent string  Prepended to the subsequent lines of each message. Uses `"  "` by default.
 
----@class fmts.IndentUserOpts<T>: fmts.IndentOpts
+---@class fmts.IndentUserOpts: fmts.IndentOpts
 ---@field line1_indent? string
 ---@field lineN_indent? string
 
----@param message string
----@param opts? fmts.IndentUserOpts
+---@param message string             A string with one or more lines.
+---@param opts? fmts.IndentUserOpts  Indentation options.
 function Fmts.indent(message, opts)
-  opts = vim.tbl_extend("keep", {}, opts or {}, defaults) ---@cast opts fmts.IndentUserOpts
+  local line1_indent = opts and opts.line1_indent or "- "
+  local lineN_indent = opts and opts.lineN_indent or "  "
   return vim
     .iter(ipairs(vim.split(message, "\n")))
-    :map(function(i, line) return (i == 1 and opts.line1_indent or opts.lineN_indent) .. line end)
+    :map(function(i, line) return (i == 1 and line1_indent or lineN_indent) .. line end)
     :join("\n")
 end
 
---- Returns consistent formatting for two or more inputs, otherwise returns the formatted input alone (or `nil`).
+--- Joins two or more formatted inputs with indents and newlines, otherwise returns `nil` or the formatted input alone.
 ---
----@generic T
----@param input T|false|nil|(T|false|nil)[]  A single value or an array of values. `false` and `nil` values are skipped.
----@param opts? fmts.IndentUserOpts          Formatting options.
+---@param input any|any[]            A single value or an array of values. Skips `false` and `nil` values.
+---@param opts? fmts.IndentUserOpts  Indentation options used for two or more input messages values.
 ---@return string|? merged
 function Fmts.merge_lines(input, opts)
   if input and not vim.islist(input) then input = { input } end
-  local messages = vim.iter(input or {}):map(function(val) return val and tostring(val) or nil end):totable()
+  local messages = vim.iter(input or {}):map(function(i) return i and tostring(i) or nil end):totable()
   if #messages < 2 then return messages[1] end
   return vim.iter(messages):map(function(msg) return Fmts.indent(msg, opts) end):join("\n")
 end
