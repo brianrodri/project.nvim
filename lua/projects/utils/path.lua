@@ -99,7 +99,7 @@ function Path:with_file(mode, callback)
   assert(file, Fmts.call_error(open_err, "io.open", self.path, mode))
   local pcall_results = table.pack(pcall(callback, file))
   local close_ok, close_err, close_err_code = file:close()
-  local merged_err = Fmts.merge_as_list({
+  local merged_err = Fmts.merge_lines({
     not close_ok and Fmts.call_error(string.format("%s(%d)", close_err, close_err_code), "file.close", file),
     not pcall_results[1] and Fmts.call_error(pcall_results[2], "callback", file),
   })

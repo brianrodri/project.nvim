@@ -1,36 +1,48 @@
 local Fmts = {}
 
---- This function formats a string as a list item with customizable indentation for the first line and subsequent lines.
----
----@param str string
----@param opts? { head_indent?: string, body_indent?: string }
-function Fmts.as_list_item(str, opts)
-  local head_indent = opts and opts.head_indent or "- "
-  local body_indent = opts and opts.body_indent or "  "
+---@class fmts.IndentOpts
+local defaults = {
+  --- Prepended to the first line of each message. Uses `"- "` by default.
+  line1_indent = "- ",
+  --- Prepended to the subsequent lines of each message. Uses `"  "` by default.
+  lineN_indent = "  ",
+}
+
+---@class fmts.IndentUserOpts<T>: fmts.IndentOpts
+---@field line1_indent? string
+---@field lineN_indent? string
+
+---@param message string
+---@param opts? fmts.IndentUserOpts
+function Fmts.indent(message, opts)
+  opts = vim.tbl_extend("keep", {}, opts or {}, defaults) ---@cast opts fmts.IndentUserOpts
   return vim
-    .iter(ipairs(vim.split(str, "\n")))
-    :map(function(i, line) return (i == 1 and head_indent or body_indent) .. line end)
+    .iter(ipairs(vim.split(message, "\n")))
+    :map(function(i, line) return (i == 1 and opts.line1_indent or opts.lineN_indent) .. line end)
     :join("\n")
 end
 
----@param items (unknown|false|nil)[]
----@param opts? { head_indent?: string, body_indent?: string }
-function Fmts.merge_as_list(items, opts)
-  ---@type string[]
-  local strings = vim.iter(items):map(function(i) return i and tostring(i) or nil end):totable()
-  if #strings == 0 then return nil end
-  if #strings == 1 then return strings[1] end
-  return vim.iter(strings):map(function(s) return Fmts.as_list_item(s, opts) end):join("\n")
+--- Returns consistent formatting for two or more inputs, otherwise returns the formatted input alone (or `nil`).
+---
+---@generic T
+---@param input T|false|nil|(T|false|nil)[]  A single value or an array of values. `false` and `nil` values are skipped.
+---@param opts? fmts.IndentUserOpts          Formatting options.
+---@return string|? merged
+function Fmts.merge_lines(input, opts)
+  if input and not vim.islist(input) then input = { input } end
+  local messages = vim.iter(input or {}):map(function(val) return val and tostring(val) or nil end):totable()
+  if #messages < 2 then return messages[1] end
+  return vim.iter(messages):map(function(msg) return Fmts.indent(msg, opts) end):join("\n")
 end
 
 --- Provides consistent formatting for errors raised by invalid assignments.
 ---
 ---@param err unknown           The error.
----@param field_name string     The name of the field.
----@param field_value any       The bad value assigned to the field.
+---@param field string          The name of the field.
+---@param value any             The bad value assigned to the field.
 ---@return string assign_error  A helpful error message with debug info about the assignment responsible.
-function Fmts.assign_error(err, field_name, field_value)
-  return string.format("%s=%s error: %s", field_name, vim.inspect(field_value), tostring(err))
+function Fmts.assign_error(err, field, value)
+  return string.format("%s=%s error: %s", field, vim.inspect(value), tostring(err))
 end
 
 --- Provides consistent formatting for errors raised by functions.
@@ -40,8 +52,8 @@ end
 ---@param ... any             The arguments passed to the function.
 ---@return string call_error  A helpful error message with debug info about the call responsible.
 function Fmts.call_error(err, func_name, ...)
-  local debug_args = vim.fn.join(vim.tbl_map(vim.inspect, { ... }), ", ")
-  return string.format("%s(%s) error: %s", func_name, debug_args, tostring(err))
+  local formatted_args = vim.fn.join(vim.tbl_map(vim.inspect, { ... }), ", ")
+  return string.format("%s(%s) error: %s", func_name, formatted_args, tostring(err))
 end
 
 --- Provides consistent formatting for implementing |__tostring| functions.
@@ -52,8 +64,8 @@ end
 ---@param ... string         The object fields included in the string.
 ---@return string obj_str    The object's string representation.
 function Fmts.class_string(obj, class_name, ...)
-  local fields = vim.iter({ ... }):map(function(f) return string.format("%s=%s", f, vim.inspect(obj[f])) end):join(", ")
-  return string.format("%s(%s)", class_name, fields)
+  local format_field = function(field) return string.format("%s=%s", field, vim.inspect(obj[field])) end
+  return string.format("%s{ %s }", class_name, vim.fn.join(vim.tbl_map(format_field, { ... }), ", "))
 end
 
 return Fmts

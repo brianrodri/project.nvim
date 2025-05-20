@@ -30,7 +30,7 @@ function Config.resolve_opts(...)
       return not ok and Fmts.assign_error(err, field, unresolved[field])
     end)
     :totable()
-  assert(#failures == 0, Fmts.merge_as_list(failures))
+  assert(#failures == 0, Fmts.merge_lines(failures))
   return resolved
 end
 
