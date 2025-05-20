@@ -30,7 +30,7 @@ end
 ---@param field_value any       The bad value assigned to the field.
 ---@return string assign_error  A helpful error message with debug info about the assignment responsible.
 function Fmts.assign_error(err, field_name, field_value)
-  return string.format("%s = %s error: %s", field_name, vim.inspect(field_value), tostring(err))
+  return string.format("%s=%s error: %s", field_name, vim.inspect(field_value), tostring(err))
 end
 
 --- Provides consistent formatting for errors raised by functions.
