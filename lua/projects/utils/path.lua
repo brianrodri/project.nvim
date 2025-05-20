@@ -21,14 +21,14 @@ function Path.new(base, ...)
   assert(type(base) == "string" or Path.is_path_obj(base), Fmts.call_error("base not a path", "Path.new", base, ...))
   if type(base) ~= "string" and select("#", ...) == 0 then return base end
   local self = setmetatable({}, Path)
-  self.path = vim.fs.joinpath(unpack(vim.iter({ base, ... }):map(tostring):totable()))
+  self.path = vim.iter({ ... }):map(tostring):fold(tostring(base), vim.fs.joinpath)
   return self
 end
 
 --- Wrapper around |nvim_buf_get_name|.
 ---
 ---@param buffer_id? integer  Use 0 for current buffer (defaults to 0).
-function Path.of_buffer(buffer_id) return Path.new(vim.api.nvim_buf_get_name(buffer_id or 0)) end
+function Path.of_buf(buffer_id) return Path.new(vim.api.nvim_buf_get_name(buffer_id or 0)) end
 
 --- Wrapper around |stdpath|.
 ---
@@ -46,7 +46,7 @@ function Path.of_buffer(buffer_id) return Path.new(vim.api.nvim_buf_get_name(buf
 ---@overload fun(what: "config_dirs" | "data_dirs"): projects.Path[]
 function Path.stdpath(what)
   local result = vim.fn.stdpath(what)
-  return type(result) == "table" and vim.iter(result):map(Path.new):totable() or Path.new(result)
+  return type(result) == "table" and vim.tbl_map(Path.new, result) or Path.new(result)
 end
 
 --- Wrapper around |vim.fs.basename()|.
@@ -65,10 +65,7 @@ end
 --- Wrapper around |vim.fs.dirname()|.
 ---
 ---@return projects.Path|? dirname
-function Path:dirname()
-  local dirname = vim.fs.dirname(self.path)
-  return dirname and Path.new(dirname)
-end
+function Path:dirname() return Path.new(vim.fs.dirname(self.path)) end
 
 --- Wrapper around |vim.fs.normalize()|.
 ---
@@ -76,42 +73,39 @@ end
 ---@return projects.Path normalized_path
 function Path:normalize(opts) return Path.new(vim.fs.normalize(self.path, opts)) end
 
---- Wrapper around |uv.fs_stat()|.
+--- Wrapper around |fs_stat()|.
 ---
 ---@return boolean exists
 function Path:exists() return vim.uv.fs_stat(self.path) ~= nil end
-
---- Wrapper around |io.open()| to ensure that |file:close()| is always called.
----
----@generic T
----@param mode openmode
----@param callback fun(path: file*): T
----@return T
-function Path:with_file(mode, callback)
-  local file, open_err = io.open(self.path, mode)
-  assert(file, Fmts.call_error(open_err, "io.open", self, mode, callback))
-  local call_ok, call_result = pcall(callback, file)
-  local close_ok, close_err, close_err_code = file:close()
-  assert(
-    call_ok and close_ok,
-    vim
-      .iter({ not call_ok and call_result, not close_ok and string.format("%s(%d)", close_err, close_err_code) })
-      :map(Fmts.with_list_indent)
-      :join("\n")
-  )
-  return call_result
-end
-
---- Wrapper around |mkdir()|.
-function Path:make_directory() return vim.fn.mkdir(self.path, "p") == 1 end
 
 --- Wrapper around |fs_realpath()|.
 ---
 ---@return projects.Path
 function Path:resolve()
   local realpath, err = vim.uv.fs_realpath(self.path)
-  assert(realpath, Fmts.call_error(err, "Path.resolve", self))
+  assert(realpath, Fmts.call_error(err, "fs_realpath", self.path))
   return Path.new(realpath)
+end
+
+--- Wrapper around |io.open()| that ensures |file:close()| is always called.
+---
+---@generic T
+---@param mode openmode
+---@param callback fun(path: file*): ...: T
+---@return T ...
+function Path:with_file(mode, callback)
+  local file, open_err = io.open(self.path, mode)
+  assert(file, Fmts.call_error(open_err, "io.open", self.path, mode))
+  local pcall_results = table.pack(pcall(callback, file))
+  local close_ok, close_err, close_err_code = file:close()
+  assert(
+    close_ok and pcall_results[1],
+    Fmts.join_as_list({
+      not close_ok and Fmts.call_error(string.format("%s(%d)", close_err, close_err_code), "file.close", file),
+      not pcall_results[1] and Fmts.call_error(pcall_results[2], "callback", file),
+    })
+  )
+  return unpack(pcall_results, 2)
 end
 
 --- Wrapper around |isdirectory()|.
@@ -119,13 +113,10 @@ end
 ---@return boolean
 function Path:is_directory() return vim.fn.isdirectory(self.path) == 1 end
 
---- Wrapper around |vim.fs.dirname()|.
+--- Wrapper around |mkdir()|.
 ---
----@return projects.Path|?
-function Path:parent()
-  local dirname = vim.fs.dirname(self.path)
-  return dirname and Path.new(dirname) or nil
-end
+---@return boolean success
+function Path:make_directory() return vim.fn.mkdir(self.path, "p") == 1 end
 
 --- Wrapper around |vim.fs.root()|.
 ---

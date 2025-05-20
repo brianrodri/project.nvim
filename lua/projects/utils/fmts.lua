@@ -14,6 +14,14 @@ function Fmts.with_list_indent(str, opts)
     :join("\n")
 end
 
+---@param items (unknown|false|nil)[]
+function Fmts.join_as_list(items)
+  local strings = vim.iter(items):map(function(i) return i and tostring(i) or nil end):totable()
+  if #strings == 0 then return nil end
+  if #strings == 1 then return strings[1] end
+  return vim.iter(strings):map(Fmts.with_list_indent):join("\n")
+end
+
 --- Provides consistent formatting for errors raised by invalid assignments.
 ---
 ---@param err unknown           The error.

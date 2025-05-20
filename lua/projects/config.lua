@@ -30,7 +30,7 @@ function Config.resolve_opts(...)
       return not ok and Fmts.assign_error(err, field, unresolved[field])
     end)
     :totable()
-  assert(#failures == 0, Fmts.call_error(vim.iter(failures):map(Fmts.with_list_indent):join("\n"), "resolve_opts", ...))
+  assert(#failures == 0, Fmts.join_as_list(failures))
   return resolved
 end
 
