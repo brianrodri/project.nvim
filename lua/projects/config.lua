@@ -12,7 +12,7 @@ local DEFAULT_OPTS = {
 local FIELD_RESOLVERS = {
   data_dir = function(value)
     assert(value, "value is required")
-    return Path.join(type(value) == "string" and value or value()):resolve()
+    return Path.new(type(value) == "string" and value or value()):resolve()
   end,
 }
 

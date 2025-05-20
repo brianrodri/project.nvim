@@ -13,31 +13,23 @@ Path.__eq = function(self, obj) return Path.is_path_obj(self) and Path.is_path_o
 ---@return boolean is_path_obj
 function Path.is_path_obj(obj) return getmetatable(obj) == Path end
 
---- Wrapper around |vim.fs.joinpath()|. Terminates with an error if no paths are provided.
+--- Constructs a new `projects.Path`. Wrapper around |vim.fs.joinpath()|.
 ---
---- NOTE: This function is the "constructor" of this class!
----
----@param ... projects.Path|string|?  The paths to join. The first must absolute or relative, the rest must be relative.
----@return projects.Path joined_path  The concatenated path.
-function Path.join(...)
-  local path_parts = vim.iter({ ... }):filter(function(p) return p ~= nil end):totable()
-  if #path_parts == 1 and Path.is_path_obj(path_parts[1]) then return path_parts[1] end
-  assert(#path_parts > 0, Fmts.call_error("one or more path(s) required", "Path.join", ...))
-  local ok, result = pcall(vim.fs.joinpath, unpack(vim.tbl_map(tostring, path_parts)))
-  assert(ok, Fmts.call_error(result, "Path.join", ...))
+---@param base projects.Path|string   An absolute or relative path.
+---@param ... projects.Path|string|?  Zero or more relative paths. `nil`s are skipped.
+---@return projects.Path
+function Path.new(base, ...)
+  assert(type(base) == "string" or Path.is_path_obj(base), Fmts.call_error("base not a path", "Path.new", base, ...))
+  if type(base) ~= "string" and select("#", ...) == 0 then return base end
   local self = setmetatable({}, Path)
-  self.path = result
+  self.path = vim.fs.joinpath(unpack(vim.iter({ base, ... }):map(tostring):totable()))
   return self
 end
 
 --- Wrapper around |nvim_buf_get_name|.
 ---
 ---@param buffer_id? integer  Use 0 for current buffer (defaults to 0).
-function Path.of_buffer(buffer_id)
-  local ok, result = pcall(vim.api.nvim_buf_get_name, buffer_id or 0)
-  assert(ok, Fmts.call_error(result, "Path.of_buffer", buffer_id))
-  return Path.join(result)
-end
+function Path.of_buffer(buffer_id) return Path.new(vim.api.nvim_buf_get_name(buffer_id or 0)) end
 
 --- Wrapper around |stdpath|.
 ---
@@ -54,9 +46,8 @@ end
 ---@overload fun(what: "cache" | "config" | "data" | "log" | "run" | "state"): projects.Path
 ---@overload fun(what: "config_dirs" | "data_dirs"): projects.Path[]
 function Path.stdpath(what)
-  local ok, result = pcall(vim.fn.stdpath, what)
-  assert(ok, Fmts.call_error(result, "Path.stdpath", what))
-  return type(result) == "table" and vim.iter(result):map(Path.join):totable() or Path.join(result)
+  local result = vim.fn.stdpath(what)
+  return type(result) == "table" and vim.iter(result):map(Path.new):totable() or Path.new(result)
 end
 
 --- Wrapper around |vim.fs.basename()|.
@@ -64,15 +55,12 @@ end
 ---@return string|? basename
 function Path:basename() return vim.fs.basename(self.path) end
 
---- Returns the |vim.fs.basename()| without the extension (i.e. the text after and including the final ".").
+--- Returns |vim.fs.basename()| without an extension.
 ---
 ---@return string|? stem
 function Path:stem()
   local basename = self:basename()
-  local parts = vim.iter(vim.split(basename or "", "."))
-  if #parts < 2 then return basename end
-  parts:pop()
-  return parts:join(".")
+  return basename and string.match(basename, "^(.+)%.[^%.]+$") or basename
 end
 
 --- Wrapper around |vim.fs.dirname()|.
@@ -80,14 +68,14 @@ end
 ---@return projects.Path|? dirname
 function Path:dirname()
   local dirname = vim.fs.dirname(self.path)
-  return dirname and Path.join(dirname)
+  return dirname and Path.new(dirname)
 end
 
 --- Wrapper around |vim.fs.normalize()|.
 ---
 ---@param opts? vim.fs.normalize.Opts
 ---@return projects.Path normalized_path
-function Path:normalize(opts) return Path.join(vim.fs.normalize(self.path, opts)) end
+function Path:normalize(opts) return Path.new(vim.fs.normalize(self.path, opts)) end
 
 --- Wrapper around |uv.fs_stat()|.
 ---
@@ -96,18 +84,18 @@ function Path:exists() return vim.uv.fs_stat(self.path) ~= nil end
 
 --- Wrapper around |io.open()| to ensure that |file:close()| is always called.
 ---
+---@generic T
 ---@param mode openmode
----@param file_consumer fun(path: file*)
-function Path:with_file(mode, file_consumer)
+---@param callback fun(path: file*): T
+---@return T
+function Path:with_file(mode, callback)
   local file, open_err = io.open(self.path, mode)
-  assert(file, Fmts.call_error(open_err, "Path.with_file", self, mode, file_consumer))
-  local call_ok, call_err = pcall(file_consumer, file)
+  assert(file, Fmts.call_error(open_err, "Path.with_file", self, mode, callback))
+  local call_ok, call_result = pcall(callback, file)
   local close_ok, close_err, close_err_code = file:close()
-  local root_cause = Errs.join(
-    not call_ok and call_err or nil,
-    not close_ok and string.format("%s(%d)", close_err, close_err_code) or nil
-  )
-  assert(vim.fn.empty(root_cause) == 1, Fmts.call_error(root_cause, "Path.with_file", self, mode, file_consumer))
+  local joined_errs = Errs.join(not call_ok and call_result, not close_ok and Fmts.exit_code(close_err, close_err_code))
+  assert(not joined_errs, Fmts.call_error(joined_errs, "Path.with_file", self, mode, callback))
+  return call_result
 end
 
 --- Wrapper around |mkdir()|.
@@ -119,7 +107,7 @@ function Path:make_directory() return vim.fn.mkdir(self.path, "p") == 1 end
 function Path:resolve()
   local realpath, err = vim.uv.fs_realpath(self.path)
   assert(realpath, Fmts.call_error(err, "Path.resolve", self))
-  return Path.join(realpath)
+  return Path.new(realpath)
 end
 
 --- Wrapper around |isdirectory()|.
@@ -132,7 +120,7 @@ function Path:is_directory() return vim.fn.isdirectory(self.path) == 1 end
 ---@return projects.Path|?
 function Path:parent()
   local dirname = vim.fs.dirname(self.path)
-  return dirname and Path.join(dirname) or nil
+  return dirname and Path.new(dirname) or nil
 end
 
 --- Wrapper around |vim.fs.root()|.
@@ -143,9 +131,9 @@ end
 ---| fun(path: projects.Path): boolean  A function that returns true if matched.
 ---@return projects.Path|?
 function Path:find_root(marker)
-  local resolved_marker = vim.is_callable(marker) and function(_, path) return marker(Path.join(path)) end or marker
-  local root = vim.fs.root(self.path, resolved_marker)
-  return root and Path.join(root) or nil
+  local marker_wrapper = vim.is_callable(marker) and function(_, path) return marker(Path.new(path)) end or marker
+  local root = vim.fs.root(self.path, marker_wrapper)
+  return root and Path.new(root) or nil
 end
 
 return Path
