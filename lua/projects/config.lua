@@ -1,4 +1,3 @@
-local Errs = require("projects.utils.errs")
 local Fmts = require("projects.utils.fmts")
 local Path = require("projects.utils.path")
 
@@ -28,10 +27,10 @@ function Config.resolve_opts(...)
     .iter(pairs(FIELD_RESOLVERS))
     :map(function(field, resolver)
       local ok, err = pcall(function() resolved[field] = resolver(unresolved[field]) end)
-      return not ok and Fmts.assign_error(err, field, unresolved[field]) or nil
+      return not ok and Fmts.assign_error(err, field, unresolved[field])
     end)
     :totable()
-  assert(#failures == 0, Fmts.call_error(Errs.join(unpack(failures)), "resolve_opts", ...))
+  assert(#failures == 0, Fmts.call_error(vim.iter(failures):map(Fmts.with_list_indent):join("\n"), "resolve_opts", ...))
   return resolved
 end
 

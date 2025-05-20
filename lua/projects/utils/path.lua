@@ -1,4 +1,3 @@
-local Errs = require("projects.utils.errs")
 local Fmts = require("projects.utils.fmts")
 
 ---@class projects.Path
@@ -90,11 +89,16 @@ function Path:exists() return vim.uv.fs_stat(self.path) ~= nil end
 ---@return T
 function Path:with_file(mode, callback)
   local file, open_err = io.open(self.path, mode)
-  assert(file, Fmts.call_error(open_err, "Path.with_file", self, mode, callback))
+  assert(file, Fmts.call_error(open_err, "io.open", self, mode, callback))
   local call_ok, call_result = pcall(callback, file)
   local close_ok, close_err, close_err_code = file:close()
-  local joined_errs = Errs.join(not call_ok and call_result, not close_ok and Fmts.exit_code(close_err, close_err_code))
-  assert(not joined_errs, Fmts.call_error(joined_errs, "Path.with_file", self, mode, callback))
+  assert(
+    call_ok and close_ok,
+    vim
+      .iter({ not call_ok and call_result, not close_ok and string.format("%s(%d)", close_err, close_err_code) })
+      :map(Fmts.with_list_indent)
+      :join("\n")
+  )
   return call_result
 end
 

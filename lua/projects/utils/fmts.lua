@@ -1,5 +1,19 @@
 local Fmts = {}
 
+--- This function formats a string as a list item with customizable indentation for the first line and subsequent lines.
+---
+---@param str string|false|nil
+---@param opts? { head_indent?: string, body_indent?: string }
+function Fmts.with_list_indent(str, opts)
+  if not str then return nil end
+  local head_indent = opts and opts.head_indent or "-\t"
+  local body_indent = opts and opts.body_indent or "\t"
+  return vim
+    .iter(ipairs(vim.split(str, "\n")))
+    :map(function(i, line) return (i == 1 and head_indent or body_indent) .. line end)
+    :join("\n")
+end
+
 --- Provides consistent formatting for errors raised by invalid assignments.
 ---
 ---@param err unknown           The error.
@@ -32,9 +46,5 @@ function Fmts.class_string(obj, class_name, ...)
   local fields = vim.iter({ ... }):map(function(f) return string.format("%s=%s", f, vim.inspect(obj[f])) end):join(", ")
   return string.format("%s(%s)", class_name, fields)
 end
-
-function Fmts.exit_code(name, code) return string.format("%s(%d)", name, code) end
-
-function Fmts.trim(str) return str:gsub("^%s+", ""):gsub("%s+$", "") end
 
 return Fmts
