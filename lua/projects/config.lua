@@ -1,4 +1,3 @@
-local Errs = require("projects.utils.errs")
 local Fmts = require("projects.utils.fmts")
 local Path = require("projects.utils.path")
 
@@ -10,9 +9,10 @@ local DEFAULT_OPTS = {
 }
 
 local FIELD_RESOLVERS = {
+  ---@param value string|fun(): string
   data_dir = function(value)
     assert(value, "value is required")
-    return Path.join(type(value) == "string" and value or value()):resolve()
+    return Path.new(type(value) == "string" and value or value()):resolve()
   end,
 }
 
@@ -24,14 +24,14 @@ function Config.resolve_opts(...)
   ---@type projects.UserOpts
   local unresolved = vim.tbl_deep_extend("keep", {}, ..., DEFAULT_OPTS)
   local resolved = {}
-  local failures = vim
-    .iter(pairs(FIELD_RESOLVERS))
+  local resolve_errors = vim
+    .iter(FIELD_RESOLVERS)
     :map(function(field, resolver)
       local ok, err = pcall(function() resolved[field] = resolver(unresolved[field]) end)
-      return not ok and Fmts.assign_error(err, field, unresolved[field]) or nil
+      if not ok then return Fmts.assign_error(err, field, unresolved[field]) end
     end)
     :totable()
-  assert(#failures == 0, Fmts.call_error(Errs.join(unpack(failures)), "resolve_opts", ...))
+  assert(#resolve_errors == 0, Fmts.call_error(Fmts.merge_lines(resolve_errors), "resolve_opts", ...))
   return resolved
 end
 
