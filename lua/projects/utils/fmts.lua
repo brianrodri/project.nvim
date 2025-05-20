@@ -2,10 +2,9 @@ local Fmts = {}
 
 --- This function formats a string as a list item with customizable indentation for the first line and subsequent lines.
 ---
----@param str string|false|nil
+---@param str string
 ---@param opts? { head_indent?: string, body_indent?: string }
-function Fmts.with_list_indent(str, opts)
-  if not str then return nil end
+function Fmts.as_list_item(str, opts)
   local head_indent = opts and opts.head_indent or "-\t"
   local body_indent = opts and opts.body_indent or "\t"
   return vim
@@ -15,11 +14,13 @@ function Fmts.with_list_indent(str, opts)
 end
 
 ---@param items (unknown|false|nil)[]
-function Fmts.join_as_list(items)
+---@param opts? { head_indent?: string, body_indent?: string }
+function Fmts.merge_as_list(items, opts)
+  ---@type string[]
   local strings = vim.iter(items):map(function(i) return i and tostring(i) or nil end):totable()
   if #strings == 0 then return nil end
   if #strings == 1 then return strings[1] end
-  return vim.iter(strings):map(Fmts.with_list_indent):join("\n")
+  return vim.iter(strings):map(function(s) return Fmts.as_list_item(s, opts) end):join("\n")
 end
 
 --- Provides consistent formatting for errors raised by invalid assignments.
