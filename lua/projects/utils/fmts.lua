@@ -64,4 +64,15 @@ function Fmts.class_string(obj, class_name, ...)
   return string.format("%s{ %s }", class_name, vim.fn.join(vim.tbl_map(format_field, { ... }), ", "))
 end
 
+--- Provides consistent formatting for errors with an optional integer code.
+---
+---@param err? string
+---@param err_code? integer
+---@return string|? err_code_message
+function Fmts.err_code(err, err_code)
+  if err and err_code then return string.format("%s(%d)", err, err_code) end
+  if err then return err end
+  if err_code then return tostring(err_code) end
+end
+
 return Fmts

@@ -27,7 +27,7 @@ function Config.resolve_opts(...)
     .iter(pairs(FIELD_RESOLVERS))
     :map(function(field, resolver)
       local ok, err = pcall(function() resolved[field] = resolver(unresolved[field]) end)
-      return not ok and Fmts.assign_error(err, field, unresolved[field]) or nil
+      if not ok then return Fmts.assign_error(err, field, unresolved[field]) end
     end)
     :totable()
   assert(#failures == 0, Fmts.merge_lines(failures))
