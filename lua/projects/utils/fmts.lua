@@ -5,8 +5,8 @@ local Fmts = {}
 ---@param str string
 ---@param opts? { head_indent?: string, body_indent?: string }
 function Fmts.as_list_item(str, opts)
-  local head_indent = opts and opts.head_indent or "-\t"
-  local body_indent = opts and opts.body_indent or "\t"
+  local head_indent = opts and opts.head_indent or "- "
+  local body_indent = opts and opts.body_indent or "  "
   return vim
     .iter(ipairs(vim.split(str, "\n")))
     :map(function(i, line) return (i == 1 and head_indent or body_indent) .. line end)

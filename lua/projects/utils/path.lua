@@ -84,7 +84,7 @@ function Path:exists() return vim.uv.fs_stat(self.path) ~= nil end
 ---@return projects.Path resolved_path
 function Path:resolve()
   local realpath, err = vim.uv.fs_realpath(self.path)
-  assert(realpath, Fmts.call_error(err, "fs_realpath", self.path))
+  if not realpath then error(Fmts.call_error(err, "fs_realpath", self.path), 0) end
   return Path.new(realpath)
 end
 
@@ -92,7 +92,7 @@ end
 ---
 ---@generic T
 ---@param mode openmode
----@param callback fun(path: file*): ...: T
+---@param callback fun(path: file*): ...: T this MUST NOT close the file.
 ---@return T ...
 function Path:with_file(mode, callback)
   local file, open_err = io.open(self.path, mode)
