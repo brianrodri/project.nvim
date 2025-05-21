@@ -1,3 +1,4 @@
+local Envs = require("projects.utils.envs")
 local Fmts = require("projects.utils.fmts")
 
 ---@class projects.Path
@@ -70,9 +71,8 @@ function Path:dirname() return Path.new(vim.fs.dirname(self.path)) end
 
 --- Wrapper around |vim.fs.normalize()|.
 ---
----@param opts? vim.fs.normalize.Opts
 ---@return projects.Path normalized_path
-function Path:normalize(opts) return Path.new(vim.fs.normalize(self.path, opts)) end
+function Path:normalize() return Path.new(vim.fs.normalize(self.path, { win = Envs.is_wsl() })) end
 
 --- Wrapper around |fs_stat()|.
 ---
