@@ -107,15 +107,44 @@ function Path:with_file(mode, callback)
   return unpack(pcall_results, 2)
 end
 
---- Wrapper around |isdirectory()|.
+--- Wrapper around |vim.fs.parents|.
 ---
----@return boolean is_directory
-function Path:is_directory() return vim.fn.isdirectory(self.path) == 1 end
+---@return (fun(state: nil, cur: projects.Path): projects.Path|?) iter_next, nil iter_state, projects.Path|nil iter_init
+function Path:parents()
+  local iter_next, iter_state, iter_init = vim.fs.parents(self.path)
+  local path_iter_next = function(state, curr)
+    local next = iter_next(state, curr.path)
+    if next then return Path.new(next) end
+  end
+  return path_iter_next, iter_state, iter_init and Path.new(iter_init)
+end
+
+--- Wrapper around |vim.fs.parents|.
+---
+---@param path projects.Path
+function Path:is_parent_of(path)
+  return vim.iter(path:parents()):any(function(p) return p.path == self.path end)
+end
+
+--- Wrapper around |uv.fs_stat()|.
+function Path:stat() return vim.uv.fs_stat(self.path) end
+
+--- Wrapper around |uv.fs_stat()|.
+function Path:isfile()
+  local stat = self:stat()
+  return stat ~= nil and stat.type == "file"
+end
+
+--- Wrapper around |uv.fs_stat()|.
+function Path:isdir()
+  local stat = self:stat()
+  return stat ~= nil and stat.type == "directory"
+end
 
 --- Wrapper around |mkdir()|.
 ---
 ---@return boolean success
-function Path:make_directory() return vim.fn.mkdir(self.path, "p") == 1 end
+function Path:mkdir() return vim.fn.mkdir(self.path, "p") == 1 end
 
 --- Wrapper around |vim.fs.root()|.
 ---
