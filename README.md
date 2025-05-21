@@ -19,7 +19,9 @@ superior project management.
   - Asynchronous file io so it will not slow down vim when reading the history
     file on startup.
 - ~~Nvim-tree.lua support/integration~~
+
   - Please add the following to your config instead:
+
     ```vim
     " Vim Script
     lua << EOF
@@ -33,6 +35,7 @@ superior project management.
     })
     EOF
     ```
+
     ```lua
     -- lua
     require("nvim-tree").setup({
@@ -98,7 +101,7 @@ use {
 
   -- All the patterns used to detect root dir, when **"pattern"** is in
   -- detection_methods
-  patterns = { ".git", "_darcs", ".hg", ".bzr", ".svn", "Makefile", "package.json" },
+  patterns = { ".git", ".hg", ".bzr", ".svn", "Makefile", "package.json" },
 
   -- Table of lsp clients to ignore by name
   -- eg: { "efm", ... }
@@ -174,12 +177,15 @@ List your exclusions before the patterns you do want.
 ### Telescope Integration
 
 To enable telescope integration:
+
 ```lua
 require('telescope').load_extension('projects')
 ```
 
 #### Telescope Projects Picker
+
 To use the projects picker
+
 ```lua
 require'telescope'.extensions.projects.projects{}
 ```
@@ -190,12 +196,12 @@ require'telescope'.extensions.projects.projects{}
 
 | Normal mode | Insert mode | Action                     |
 | ----------- | ----------- | -------------------------- |
-| f           | \<c-f\>     | find\_project\_files       |
-| b           | \<c-b\>     | browse\_project\_files     |
-| d           | \<c-d\>     | delete\_project            |
-| s           | \<c-s\>     | search\_in\_project\_files |
-| r           | \<c-r\>     | recent\_project\_files     |
-| w           | \<c-w\>     | change\_working\_directory |
+| f           | `<c-f>`     | `find_project_files`       |
+| b           | `<c-b>`     | `browse_project_files`     |
+| d           | `<c-d>`     | `delete_project`           |
+| s           | `<c-s>`     | `search_in_project_files`  |
+| r           | `<c-r>`     | `recent_project_files`     |
+| w           | `<c-w>`     | `change_working_directory` |
 
 ## API
 
@@ -212,3 +218,5 @@ print(vim.inspect(recent_projects))
 
 - All pull requests are welcome.
 - If you encounter bugs please open an issue.
+
+## Roadmap
