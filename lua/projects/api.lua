@@ -2,8 +2,6 @@ local Errs = require("projects.utils.errs")
 local State = require("projects.state")
 
 local API = {
-  --- Global plugin state.
-  ---
   ---@private
   ---@type projects.State
   global_state = State.init(),

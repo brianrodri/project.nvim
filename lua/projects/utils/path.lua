@@ -56,7 +56,7 @@ end
 ---@return string basename
 function Path:basename() return vim.fs.basename(self.path) end
 
---- Returns |vim.fs.basename()| without an extension.
+--- Returns the |vim.fs.basename()| without its final extension.
 ---
 ---@return string|? stem
 function Path:stem()
@@ -91,19 +91,19 @@ end
 --- Wrapper around |io.open()| that ensures |file:close()| is always called.
 ---
 ---@generic T
----@param mode openmode
----@param callback fun(path: file*): ...: T this MUST NOT close the file.
+---@param file_mode openmode
+---@param callback fun(file: file*): ...: T  Called after |io.open()| succeeds. IMPORTANT: THIS MUST NOT CLOSE THE FILE!
 ---@return T ...
-function Path:with_file(mode, callback)
-  local file, open_err = io.open(self.path, mode)
-  assert(file, Fmts.call_error(open_err, "io.open", self.path, mode))
+function Path:with_file(file_mode, callback)
+  local file, open_err = io.open(self.path, file_mode)
+  assert(file, Fmts.call_error(open_err, "io.open", self.path, file_mode))
   local pcall_results = table.pack(pcall(callback, file))
   local close_ok, close_err, close_err_code = file:close()
-  local merged_err = Fmts.merge_lines({
+  local aggregate_error = Fmts.merge_lines({
     not close_ok and Fmts.call_error(Fmts.err_code(close_err, close_err_code), "file.close", file),
     not pcall_results[1] and Fmts.call_error(pcall_results[2], "callback", file),
   })
-  assert(not merged_err, merged_err)
+  assert(not aggregate_error, aggregate_error)
   return unpack(pcall_results, 2)
 end
 
@@ -113,8 +113,8 @@ end
 function Path:parents()
   local iter_next, iter_state, iter_init = vim.fs.parents(self.path)
   local path_iter_next = function(state, curr)
-    local next = iter_next(state, curr.path)
-    if next then return Path.new(next) end
+    local next_parent = iter_next(state, curr.path)
+    if next_parent then return Path.new(next_parent) end
   end
   return path_iter_next, iter_state, iter_init and Path.new(iter_init)
 end
