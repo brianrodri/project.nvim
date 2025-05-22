@@ -220,3 +220,5 @@ print(vim.inspect(recent_projects))
 - If you encounter bugs please open an issue.
 
 ## Roadmap
+
+- TODO

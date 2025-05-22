@@ -1,3 +1,4 @@
+local Envs = require("projects.utils.envs")
 local Fmts = require("projects.utils.fmts")
 
 ---@class projects.Path
@@ -55,7 +56,7 @@ end
 ---@return string basename
 function Path:basename() return vim.fs.basename(self.path) end
 
---- Returns |vim.fs.basename()| without an extension.
+--- Returns the |vim.fs.basename()| without its final extension.
 ---
 ---@return string|? stem
 function Path:stem()
@@ -70,9 +71,8 @@ function Path:dirname() return Path.new(vim.fs.dirname(self.path)) end
 
 --- Wrapper around |vim.fs.normalize()|.
 ---
----@param opts? vim.fs.normalize.Opts
 ---@return projects.Path normalized_path
-function Path:normalize(opts) return Path.new(vim.fs.normalize(self.path, opts)) end
+function Path:normalize() return Path.new(vim.fs.normalize(self.path, { win = Envs.is_wsl() })) end
 
 --- Wrapper around |fs_stat()|.
 ---
@@ -91,31 +91,60 @@ end
 --- Wrapper around |io.open()| that ensures |file:close()| is always called.
 ---
 ---@generic T
----@param mode openmode
----@param callback fun(path: file*): ...: T this MUST NOT close the file.
+---@param file_mode openmode
+---@param callback fun(file: file*): ...: T  Called after |io.open()| succeeds. IMPORTANT: THIS MUST NOT CLOSE THE FILE!
 ---@return T ...
-function Path:with_file(mode, callback)
-  local file, open_err = io.open(self.path, mode)
-  assert(file, Fmts.call_error(open_err, "io.open", self.path, mode))
+function Path:with_file(file_mode, callback)
+  local file, open_err = io.open(self.path, file_mode)
+  assert(file, Fmts.call_error(open_err, "io.open", self.path, file_mode))
   local pcall_results = table.pack(pcall(callback, file))
   local close_ok, close_err, close_err_code = file:close()
-  local merged_err = Fmts.merge_lines({
+  local aggregate_error = Fmts.merge_lines({
     not close_ok and Fmts.call_error(Fmts.err_code(close_err, close_err_code), "file.close", file),
     not pcall_results[1] and Fmts.call_error(pcall_results[2], "callback", file),
   })
-  assert(not merged_err, merged_err)
+  assert(not aggregate_error, aggregate_error)
   return unpack(pcall_results, 2)
 end
 
---- Wrapper around |isdirectory()|.
+--- Wrapper around |vim.fs.parents|.
 ---
----@return boolean is_directory
-function Path:is_directory() return vim.fn.isdirectory(self.path) == 1 end
+---@return (fun(state: nil, cur: projects.Path): projects.Path|?) iter_next, nil iter_state, projects.Path|nil iter_init
+function Path:parents()
+  local iter_next, iter_state, iter_init = vim.fs.parents(self.path)
+  local path_iter_next = function(state, curr)
+    local next_parent = iter_next(state, curr.path)
+    if next_parent then return Path.new(next_parent) end
+  end
+  return path_iter_next, iter_state, iter_init and Path.new(iter_init)
+end
+
+--- Wrapper around |vim.fs.parents|.
+---
+---@param path projects.Path
+function Path:is_parent_of(path)
+  return vim.iter(path:parents()):any(function(p) return p.path == self.path end)
+end
+
+--- Wrapper around |uv.fs_stat()|.
+function Path:stat() return vim.uv.fs_stat(self.path) end
+
+--- Wrapper around |uv.fs_stat()|.
+function Path:isfile()
+  local stat = self:stat()
+  return stat ~= nil and stat.type == "file"
+end
+
+--- Wrapper around |uv.fs_stat()|.
+function Path:isdir()
+  local stat = self:stat()
+  return stat ~= nil and stat.type == "directory"
+end
 
 --- Wrapper around |mkdir()|.
 ---
 ---@return boolean success
-function Path:make_directory() return vim.fn.mkdir(self.path, "p") == 1 end
+function Path:mkdir() return vim.fn.mkdir(self.path, "p") == 1 end
 
 --- Wrapper around |vim.fs.root()|.
 ---
