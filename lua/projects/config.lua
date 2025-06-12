@@ -1,6 +1,8 @@
 local Path = require("projects.models.path")
 local formats = require("projects.utils.formats")
 
+local M = {}
+
 --- A comprehensive set of fields used to configure the plugin's behavior.
 ---
 --- NOTE: Individual fields are defined in the |CONFIG RESOLVER DEFINITIONS| section.
@@ -13,8 +15,6 @@ local DEFAULT_CONFIG = {}
 ---@class projects.Config.Resolvers
 ---@private
 local CONFIG_RESOLVERS = {}
-
-local M = {}
 
 --- Returns a valid config from the user-provided options. Otherwise, throws an error message describing the issue(s).
 ---
