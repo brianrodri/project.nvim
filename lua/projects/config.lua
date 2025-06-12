@@ -47,9 +47,7 @@ DEFAULT_CONFIG.data_dir = Path.new(vim.fn.stdpath("data"), "projects-nvim")
 CONFIG_RESOLVERS.data_dir = function(opts)
   local user_value = opts and opts.data_dir
   if not user_value then return end
-  ---@cast user_value -?
-  if vim.is_callable(user_value) then user_value = user_value() end
-  ---@cast user_value -function
+  if type(user_value) == "function" or vim.is_callable(user_value) then user_value = user_value() end
   local data_dir = Path.new(user_value):normalize()
   assert(data_dir:mkdir(), "failed to access directory")
   return data_dir
