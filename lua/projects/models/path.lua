@@ -1,5 +1,5 @@
 local Envs = require("projects.utils.envs")
-local Fmts = require("projects.utils.fmts")
+local formats = require("projects.utils.formats")
 
 ---@class projects.Path
 ---@field path string
@@ -19,7 +19,7 @@ function Path.is_path_obj(obj) return getmetatable(obj) == Path end
 ---@param ... projects.Path|string|?  Zero or more relative paths. `nil`s are skipped.
 ---@return projects.Path new_path
 function Path.new(base, ...)
-  assert(type(base) == "string" or Path.is_path_obj(base), Fmts.call_error("base not a path", "Path.new", base, ...))
+  assert(type(base) == "string" or Path.is_path_obj(base), formats.call_error("base not a path", "Path.new", base, ...))
   if type(base) ~= "string" and select("#", ...) == 0 then return base end
   local self = setmetatable({}, Path)
   self.path = vim.iter({ ... }):map(tostring):fold(tostring(base), vim.fs.joinpath)
@@ -84,7 +84,7 @@ function Path:exists() return vim.uv.fs_stat(self.path) ~= nil end
 ---@return projects.Path resolved_path
 function Path:resolve()
   local realpath, err = vim.uv.fs_realpath(self.path)
-  if not realpath then error(Fmts.call_error(err, "fs_realpath", self.path), 0) end
+  if not realpath then error(formats.call_error(err, "fs_realpath", self.path), 0) end
   return Path.new(realpath)
 end
 
@@ -96,12 +96,12 @@ end
 ---@return T ...
 function Path:with_file(file_mode, callback)
   local file, open_err = io.open(self.path, file_mode)
-  assert(file, Fmts.call_error(open_err, "io.open", self.path, file_mode))
+  assert(file, formats.call_error(open_err, "io.open", self.path, file_mode))
   local pcall_results = table.pack(pcall(callback, file))
   local close_ok, close_err, close_err_code = file:close()
-  local aggregate_error = Fmts.merge_lines({
-    not close_ok and Fmts.call_error(Fmts.err_code(close_err, close_err_code), "file.close", file),
-    not pcall_results[1] and Fmts.call_error(pcall_results[2], "callback", file),
+  local aggregate_error = formats.merge_lines({
+    not close_ok and formats.call_error(formats.err_code(close_err, close_err_code), "file.close", file),
+    not pcall_results[1] and formats.call_error(pcall_results[2], "callback", file),
   })
   assert(not aggregate_error, aggregate_error)
   return unpack(pcall_results, 2)
