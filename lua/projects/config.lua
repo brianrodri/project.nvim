@@ -1,38 +1,37 @@
-local Fmts = require("projects.utils.fmts")
-local Path = require("projects.utils.path")
+local Path = require("projects.models.path")
+local formats = require("projects.utils.formats")
 
-local Config = {}
+local M = {} -- Module (public exports)
+local H = {} -- Helper (private)
 
----@type projects.UserOpts
-local DEFAULT_OPTS = {
-  data_dir = vim.fn.stdpath("data") .. "/projects.nvim",
+---@param setup_opts projects.SetupOpts
+---
+---@return projects.Config
+function M.from_setup_opts(setup_opts)
+  local config = vim.deepcopy(H.CONFIG)
+  local resolve_errors = {}
+  for field_name, field_resolver in pairs(H.FIELD_RESOLVERS) do
+    if field_resolver then
+      local ok, err = pcall(function() config[field_name] = field_resolver(setup_opts) end)
+      if not ok then table.insert(resolve_errors, formats.assign_error(err, field_name, setup_opts[field_name])) end
+    end
+  end
+  assert(#resolve_errors == 0, formats.call_error(formats.merge_lines(resolve_errors), "from_setup_opts", setup_opts))
+  return config
+end
+
+---@class projects.Config
+H.CONFIG = {
+  --- The directory used to persist state between sessions.
+  data_dir = Path.new(vim.fn.stdpath("data"), "projects.nvim"),
 }
 
-local FIELD_RESOLVERS = {
-  ---@param value string|fun(): string
-  data_dir = function(value)
-    assert(value, "value is required")
-    return Path.new(type(value) == "string" and value or value()):resolve()
+H.FIELD_RESOLVERS = {
+  ---@param opts projects.SetupOpts
+  data_dir = function(opts)
+    local data_dir = assert(opts.data_dir, "value is required")
+    return Path.new(type(data_dir) == "string" and data_dir or data_dir())
   end,
 }
 
---- Returns a validated projects.ResolvedConfig from inputs. Otherwise, terminates with a comprehensive error message.
----
----@param ... projects.UserOpts zero or more opts merged with |vim.tbl_deep_extend()| and `"keep"`.
----@return projects.Config
-function Config.resolve_opts(...)
-  ---@type projects.UserOpts
-  local unresolved = vim.tbl_deep_extend("keep", {}, ..., DEFAULT_OPTS)
-  local resolved = {}
-  local resolve_errors = vim
-    .iter(FIELD_RESOLVERS)
-    :map(function(field, resolver)
-      local ok, err = pcall(function() resolved[field] = resolver(unresolved[field]) end)
-      if not ok then return Fmts.assign_error(err, field, unresolved[field]) end
-    end)
-    :totable()
-  assert(#resolve_errors == 0, Fmts.call_error(Fmts.merge_lines(resolve_errors), "resolve_opts", ...))
-  return resolved
-end
-
-return Config
+return M

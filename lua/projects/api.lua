@@ -1,29 +1,26 @@
-local Errs = require("projects.utils.errs")
-local State = require("projects.state")
+local errors = require("projects.utils.errors")
 
-local API = {
-  ---@private
-  ---@type projects.State
-  global_state = State.init(),
-}
+local M = {}
 
----@param opts? projects.UserOpts
-function API.setup(opts) API.global_state:resolve(opts) end
+---@param opts? projects.SetupOpts
+function M.setup(opts) errors.TODO("setup", opts) end
 
+---@param root_dir string
 ---@param opts? projects.AddProjectOpts
----@return boolean ok, unknown|? err
-function API.add_project(opts) return pcall(API.global_state.add_project, API.global_state, opts) end
+---@return boolean ok, string|? err
+function M.add_project(root_dir, opts) return errors.TODO("add_project", root_dir, opts) end
 
+---@param root_dir string
 ---@param opts? projects.DeleteProjectOpts
----@return boolean ok, unknown|? err
-function API.delete_project(opts) return pcall(API.global_state.delete_project, API.global_state, opts) end
+---@return boolean ok, string|? err
+function M.delete_project(root_dir, opts) return errors.TODO("delete_project", root_dir, opts) end
 
----@param opts? projects.EnterProjectDirectoryOpts|?
----@return boolean ok, unknown|? err
-function API.enter_project_directory(opts) return Errs.TODO("API.enter_project_directory", opts) end
+---@param opts? projects.EnterProjectRootOpts
+---@return boolean ok, string|? err
+function M.enter_project_root(opts) return errors.TODO("enter_project_root", opts) end
 
----@param opts? projects.GetRecentProjectsOpts|?
----@return boolean ok, unknown|? err
-function API.get_recent_projects(opts) return Errs.TODO("API.get_recent_projects", opts) end
+---@param opts? projects.GetRecentProjectsOpts
+---@return string[] dirs, string|? err
+function M.get_recent_projects(opts) return errors.TODO("get_recent_projects", opts) end
 
-return API
+return M
