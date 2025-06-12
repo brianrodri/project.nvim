@@ -17,7 +17,7 @@
 
 ---@class projects.DeleteProjectOpts
 
----@class projects.GetRecentProjectsOpts<T>
+---@class projects.GetRecentProjectsOpts
 ---@field cwd string|?
 
 ---@class projects.EnterProjectRootOpts
