@@ -1,4 +1,3 @@
-local Envs = require("projects.utils.envs")
 local formats = require("projects.utils.formats")
 
 ---@class projects.Path
@@ -71,8 +70,10 @@ function Path:dirname() return Path.new(vim.fs.dirname(self.path)) end
 
 --- Wrapper around |vim.fs.normalize()|.
 ---
+---@param opts? vim.fs.normalize.Opts
+---
 ---@return projects.Path normalized_path
-function Path:normalize() return Path.new(vim.fs.normalize(self.path, { win = Envs.is_wsl() })) end
+function Path:normalize(opts) return Path.new(vim.fs.normalize(self.path, opts)) end
 
 --- Wrapper around |fs_stat()|.
 ---
@@ -144,7 +145,7 @@ end
 --- Wrapper around |mkdir()|.
 ---
 ---@return boolean success
-function Path:mkdir() return vim.fn.mkdir(self.path, "p") == 1 end
+function Path:mkdir() return vim.fn.isdirectory(self.path) == 1 or vim.fn.mkdir(self.path, "p") == 1 end
 
 --- Wrapper around |vim.fs.root()|.
 ---
