@@ -3,6 +3,8 @@ local formats = require("projects.utils.formats")
 
 --- A comprehensive set of fields used to configure the plugin's behavior.
 ---
+--- NOTE: Individual fields are defined in the |CONFIG RESOLVER DEFINITIONS| section.
+---
 ---@class projects.Config
 local DEFAULT_CONFIG = {}
 
