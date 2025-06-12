@@ -7,8 +7,12 @@ local M = {}
 --- NOTE: Individual fields are defined in the |CONFIG RESOLVER DEFINITIONS| section.
 local DEFAULT_CONFIG = {}
 
+---@class projects.Config.Resolvers: { [string]: fun(opts?: projects.SetupOpts): unknown }
 ---@private
----@class projects.Config.Resolvers
+---
+-- Each function receives user-provided options and returns a value for the corresponding field, or `nil` to fallback to
+-- the default value. Otherwise, throws an error message describing the issue(s) that could not be safely resolved.
+---
 --- NOTE: Individual functions are defined in the |CONFIG RESOLVER DEFINITIONS| section.
 local CONFIG_RESOLVERS = {}
 
@@ -34,9 +38,6 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 -- CONFIG RESOLVER DEFINITIONS
 ------------------------------------------------------------------------------------------------------------------------
-
--- NOTE: Each function receives user-provided options and returns a value for its corresponding field, if valid.
--- Otherwise, returns `nil` or throws an error message describing the issue(s) found.
 
 --- The directory used to persist state between Neovim sessions.
 DEFAULT_CONFIG.data_dir = Path.new(vim.fn.stdpath("data"), "projects-nvim")
