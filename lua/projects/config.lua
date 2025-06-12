@@ -1,37 +1,55 @@
 local Path = require("projects.models.path")
 local formats = require("projects.utils.formats")
 
-local M = {} -- Module (public exports)
-local H = {} -- Helper (private)
-
----@param setup_opts projects.SetupOpts
+--- A comprehensive set of fields used to configure the plugin's behavior.
 ---
+---@class projects.Config
+local DEFAULT_CONFIG = {}
+
+--- Functions for resolving/validating individual config fields.
+---
+--- Each function receives user-provided options and returns a value for their corresponding field.
+--- Otherwise, if the input is invalid or unresolvable, then an error message is thrown describing the issue(s).
+---
+---@class projects.Config.Resolvers
+---@private
+local CONFIG_RESOLVERS = {}
+
+local M = {}
+
+--- Returns a valid config from the user-provided options. Otherwise, throws an error message describing the issue(s).
+---
+---@param setup_opts projects.SetupOpts|?
 ---@return projects.Config
 function M.from_setup_opts(setup_opts)
-  local config = vim.deepcopy(H.CONFIG)
-  local resolve_errors = {}
-  for field_name, field_resolver in pairs(H.FIELD_RESOLVERS) do
-    if field_resolver then
-      local ok, err = pcall(function() config[field_name] = field_resolver(setup_opts) end)
-      if not ok then table.insert(resolve_errors, formats.assign_error(err, field_name, setup_opts[field_name])) end
-    end
-  end
+  local user_opts = vim.tbl_deep_extend("keep", setup_opts or {}, DEFAULT_CONFIG)
+  local resolved_config = {}
+  local resolve_errors = vim
+    .iter(vim.tbl_keys(DEFAULT_CONFIG))
+    :map(function(field_name)
+      local ok, err = pcall(function() resolved_config[field_name] = CONFIG_RESOLVERS[field_name](user_opts) end)
+      if not ok then return formats.call_error(err, "resolve_field", field_name) end
+    end)
+    :totable()
+
   assert(#resolve_errors == 0, formats.call_error(formats.merge_lines(resolve_errors), "from_setup_opts", setup_opts))
-  return config
+  return resolved_config
 end
 
----@class projects.Config
-H.CONFIG = {
-  --- The directory used to persist state between sessions.
-  data_dir = Path.new(vim.fn.stdpath("data"), "projects.nvim"),
-}
+------------------------------------------------------------------------------------------------------------------------
+-- CONFIG RESOLVER DEFINITIONS
+------------------------------------------------------------------------------------------------------------------------
 
-H.FIELD_RESOLVERS = {
-  ---@param opts projects.SetupOpts
-  data_dir = function(opts)
-    local data_dir = assert(opts.data_dir, "value is required")
-    return Path.new(type(data_dir) == "string" and data_dir or data_dir())
-  end,
-}
+--- The directory used to persist state between Neovim sessions.
+DEFAULT_CONFIG.data_dir = Path.new(vim.fn.stdpath("data"), "projects-nvim")
+
+---@param opts projects.SetupOpts
+CONFIG_RESOLVERS.data_dir = function(opts)
+  local user_value = assert(opts.data_dir, "value is missing")
+  if vim.is_callable(user_value) then user_value = user_value() end ---@cast user_value -function
+  local data_dir = Path.new(user_value):normalize()
+  assert(data_dir:mkdir(), "failed to access directory")
+  return data_dir
+end
 
 return M

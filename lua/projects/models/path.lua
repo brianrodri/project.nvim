@@ -144,7 +144,7 @@ end
 --- Wrapper around |mkdir()|.
 ---
 ---@return boolean success
-function Path:mkdir() return vim.fn.mkdir(self.path, "p") == 1 end
+function Path:mkdir() return vim.fn.isdirectory(self.path) == 1 or vim.fn.mkdir(self.path, "p") == 1 end
 
 --- Wrapper around |vim.fs.root()|.
 ---
