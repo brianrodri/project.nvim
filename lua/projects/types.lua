@@ -1,18 +1,4 @@
 ------------------------------------------------------------------------------------------------------------------------
--- Plugin Options
-------------------------------------------------------------------------------------------------------------------------
-
---- A comprehensive set of fields used to configure the plugin's behavior.
----
----@class projects.Config
----@field data_dir projects.Path  The directory used to persist state between Neovim sessions.
-
---- A relaxed config interface intended for users.
----
----@class projects.SetupOpts: projects.Config
----@field data_dir (fun(): string)|string|?
-
-------------------------------------------------------------------------------------------------------------------------
 -- Plugin State
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -23,6 +9,9 @@
 ------------------------------------------------------------------------------------------------------------------------
 -- API Options
 ------------------------------------------------------------------------------------------------------------------------
+
+---@class projects.SetupOpts: projects.Config
+---@field data_dir (fun(): string)|string|?
 
 ---@class projects.AddProjectOpts
 
