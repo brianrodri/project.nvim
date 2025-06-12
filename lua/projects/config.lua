@@ -24,16 +24,14 @@ local M = {}
 ---@param setup_opts projects.SetupOpts|?
 ---@return projects.Config
 function M.from_setup_opts(setup_opts)
-  local user_opts = vim.tbl_deep_extend("keep", setup_opts or {}, DEFAULT_CONFIG)
-  local resolved_config = {}
+  local resolved_config = vim.deepcopy(DEFAULT_CONFIG, true)
   local resolve_errors = vim
     .iter(vim.tbl_keys(DEFAULT_CONFIG))
     :map(function(field_name)
-      local ok, err = pcall(function() resolved_config[field_name] = CONFIG_RESOLVERS[field_name](user_opts) end)
+      local ok, err = pcall(function() resolved_config[field_name] = CONFIG_RESOLVERS[field_name](setup_opts) end)
       if not ok then return formats.call_error(err, "resolve_field", field_name) end
     end)
     :totable()
-
   assert(#resolve_errors == 0, formats.call_error(formats.merge_lines(resolve_errors), "from_setup_opts", setup_opts))
   return resolved_config
 end
@@ -45,10 +43,13 @@ end
 --- The directory used to persist state between Neovim sessions.
 DEFAULT_CONFIG.data_dir = Path.new(vim.fn.stdpath("data"), "projects-nvim")
 
----@param opts projects.SetupOpts
+---@param opts? projects.SetupOpts
 CONFIG_RESOLVERS.data_dir = function(opts)
-  local user_value = assert(opts.data_dir, "value is missing")
-  if vim.is_callable(user_value) then user_value = user_value() end ---@cast user_value -function
+  local user_value = opts and opts.data_dir
+  if not user_value then return end
+  ---@cast user_value -?
+  if vim.is_callable(user_value) then user_value = user_value() end
+  ---@cast user_value -function
   local data_dir = Path.new(user_value):normalize()
   assert(data_dir:mkdir(), "failed to access directory")
   return data_dir
